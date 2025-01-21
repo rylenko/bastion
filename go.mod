@@ -8,6 +8,6 @@ replace (
 )
 
 require (
-	github.com/rylenko/sapphire/pkg/shield v0.0.0-20250118214642-dd8bf6fdc8b2
-	github.com/rylenko/sapphire/pkg/shieldprovider v0.0.0-00010101000000-000000000000
+	github.com/rylenko/sapphire/pkg/shield v0.0.1
+	github.com/rylenko/sapphire/pkg/shieldprovider v0.0.1
 )
