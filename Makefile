@@ -12,6 +12,9 @@ clean:
 lint: bin/golangci-lint
 	go list -f '{{.Dir}}/...' -m | xargs ./bin/golangci-lint run --fix
 
+run:
+	@go run ./cmd/main.go
+
 test:
 	go list -f '{{.Dir}}/...' -m | xargs go test -coverprofile test-coverage
 
