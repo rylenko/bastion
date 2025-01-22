@@ -18,12 +18,16 @@ func (provider *Provider) ComputeSharedSecretKey(
 
 	foreignPrivateKey, err := provider.curve.NewPrivateKey(privateKey.Bytes())
 	if err != nil {
-		return nil, fmt.Errorf("%w: private key: %w", ErrInvalidValue, err)
+		return nil, fmt.Errorf("%w: private key: %w", ErrConvertToForeignType, err)
+	}
+
+	if publicKey == nil {
+		return nil, fmt.Errorf("%w: public key is nil", ErrInvalidValue)
 	}
 
 	foreignPublicKey, err := provider.curve.NewPublicKey(publicKey.Bytes())
 	if err != nil {
-		return nil, fmt.Errorf("%w: public key: %w", ErrInvalidValue, err)
+		return nil, fmt.Errorf("%w: public key: %w", ErrConvertToForeignType, err)
 	}
 
 	sharedSecretKeyBytes, err := foreignPrivateKey.ECDH(foreignPublicKey)
