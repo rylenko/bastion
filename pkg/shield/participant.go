@@ -20,7 +20,7 @@ func NewRecipient(localPrivateKey *keys.Private, rootKey *keys.Root) *Participan
 }
 
 // NewSender creates a sending participant in the conversation.
-func NewSender(provider Provider, recipientPublicKey *keys.Public, rootKey *keys.Root) (*Participant, error) {
+func NewSender(provider Provider, remotePublicKey *keys.Public, rootKey *keys.Root) (*Participant, error) {
 	if provider == nil {
 		return nil, fmt.Errorf("%w: provider is nil", ErrInvalidValue)
 	}
@@ -31,9 +31,10 @@ func NewSender(provider Provider, recipientPublicKey *keys.Public, rootKey *keys
 	}
 
 	rootChain := chains.NewRoot(rootKey)
-	// sendingKey, sendingNextHeaderKey := rootChain.
+	// sendingKey, sendingNextHeaderKey := rootChain.Forward(
+	// provider.ComputeSharedSecretKey(localPrivateKey, remotePublicKey))
 
-	participant := newParticipant(localPrivateKey, recipientPublicKey, rootChain)
+	participant := newParticipant(localPrivateKey, remotePublicKey, rootChain)
 
 	return participant, nil
 }

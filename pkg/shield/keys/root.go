@@ -1,6 +1,6 @@
 package keys
 
-// Root is the key of conversation participant's root chain. The root key must be stored locally and not shared
+// Root is the key of conversation participant's root chain. The key must be stored locally and not shared
 // anywhere.
 type Root struct {
 	bytes []byte
