@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	sender, err := shield.NewSender(shieldprovider.New())
+	sender, err := shield.NewSender(shieldprovider.New(), nil, nil)
 	if err != nil {
 		log.Fatal("new shield sender: ", err)
 	}
