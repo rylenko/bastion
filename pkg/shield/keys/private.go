@@ -1,6 +1,6 @@
 package keys
 
-// Private is the private key of the conversation participant. The key must be stored locally and not shared anywhere.
+// Private is the private key of the conversation participant. The key mus not be shared anywhere.
 type Private struct {
 	bytes []byte
 }

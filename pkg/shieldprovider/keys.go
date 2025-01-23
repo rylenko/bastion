@@ -12,22 +12,14 @@ func (provider *Provider) ComputeSharedSecretKey(
 	privateKey *keys.Private,
 	publicKey *keys.Public,
 ) (*keys.SharedSecret, error) {
-	if privateKey == nil {
-		return nil, fmt.Errorf("%w: private key is nil", ErrInvalidValue)
-	}
-
-	foreignPrivateKey, err := provider.curve.NewPrivateKey(privateKey.Bytes())
+	foreignPrivateKey, err := provider.mapToForeignPrivateKey(privateKey)
 	if err != nil {
-		return nil, fmt.Errorf("%w: private key: %w", ErrConvertToForeignType, err)
+		return nil, fmt.Errorf("%w: private key: %w", ErrMapToForeignType, err)
 	}
 
-	if publicKey == nil {
-		return nil, fmt.Errorf("%w: public key is nil", ErrInvalidValue)
-	}
-
-	foreignPublicKey, err := provider.curve.NewPublicKey(publicKey.Bytes())
+	foreignPublicKey, err := provider.mapToForeignPublicKey(publicKey)
 	if err != nil {
-		return nil, fmt.Errorf("%w: public key: %w", ErrConvertToForeignType, err)
+		return nil, fmt.Errorf("%w: public key: %w", ErrMapToForeignType, err)
 	}
 
 	sharedSecretKeyBytes, err := foreignPrivateKey.ECDH(foreignPublicKey)
@@ -47,7 +39,10 @@ func (provider *Provider) GeneratePrivateKey() (*keys.Private, error) {
 		return nil, err
 	}
 
-	key := keys.NewPrivate(foreignKey.Bytes())
+	key, err := provider.mapFromForeignPrivateKey(foreignKey)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrMapFromForeignType, err)
+	}
 
 	return key, nil
 }
