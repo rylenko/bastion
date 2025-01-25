@@ -9,12 +9,16 @@ type Provider interface {
 	// For example, this could be the Diffie-Hellman algorithm.
 	ComputeSharedSecretKey(privateKey *keys.Private, publicKey *keys.Public) (*keys.SharedSecret, error)
 
-	// ForwardRootChain moves the root chain forward. In other words, creating a new root key, a new master key for the
-	// sending or receiving chain, and the next header encryption key.
+	// ForwardMessageChain moves the message chain forward. A message chain is usually either a sending chain or a
+	// receiving chain. In other words, a new message master key and a message key for encrypting data are created.
+	ForwardMessageChain(messageMasterKey *keys.MessageMaster) (*keys.MessageMaster, *keys.Message, error)
+
+	// ForwardRootChain moves the root chain forward. In other words, creating a new root key, a new message master key for
+	// the sending or receiving chain, and the next header encryption key.
 	ForwardRootChain(
 		rootKey *keys.Root,
 		sharedSecretKey *keys.SharedSecret,
-	) (*keys.Root, *keys.Master, *keys.Header, error)
+	) (*keys.Root, *keys.MessageMaster, *keys.Header, error)
 
 	// GeneratePrivateKey must generate a cryptographically secure private key.
 	GeneratePrivateKey() (*keys.Private, error)
