@@ -17,8 +17,19 @@ type Participant struct {
 }
 
 // NewRecipient creates a receiving participant in the conversation.
-func NewRecipient(localPrivateKey *keys.Private, rootKey *keys.Root) *Participant {
-	return newParticipant(localPrivateKey, nil, chains.NewRoot(rootKey), nil, nil)
+func NewRecipient(
+	localPrivateKey *keys.Private,
+	rootKey *keys.Root,
+	sendingChainNextHeaderKey *keys.Header,
+	receivingChainNextHeaderKey *keys.Header,
+) *Participant {
+	return newParticipant(
+		localPrivateKey,
+		nil,
+		chains.NewRoot(rootKey),
+		chains.NewSending(nil, nil, sendingChainNextHeaderKey),
+		chains.NewReceiving(receivingChainNextHeaderKey),
+	)
 }
 
 // NewSender creates a sending participant in the conversation.
