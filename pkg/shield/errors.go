@@ -3,7 +3,9 @@ package shield
 import "errors"
 
 var (
-	ErrForwardChain = errors.New("forward chain")
-	ErrInvalidValue = errors.New("invalid value")
-	ErrProvider     = errors.New("provider")
+	ErrAdvanceChain  = errors.New("advance chain")
+	ErrCrypto        = errors.New("crypto")
+	ErrDiffieHellman = errors.New("diffie hellman")
+	ErrForeignType   = errors.New("foreign type")
+	ErrInvalidValue  = errors.New("invalid value")
 )

@@ -3,70 +3,84 @@ package shield
 import (
 	"fmt"
 
-	"github.com/rylenko/sapphire/pkg/shield/chains"
 	"github.com/rylenko/sapphire/pkg/shield/keys"
+	"github.com/rylenko/sapphire/pkg/shield/receivingchain"
+	"github.com/rylenko/sapphire/pkg/shield/rootchain"
+	"github.com/rylenko/sapphire/pkg/shield/sendingchain"
 )
 
 // Participant is a participant in the coversation.
 type Participant struct {
 	localPrivateKey *keys.Private
 	remotePublicKey *keys.Public
-	rootChain       *chains.Root
-	sendingChain    *chains.Sending
-	receivingChain  *chains.Receiving
+	rootChain       *rootchain.RootChain
+	sendingChain    *sendingchain.SendingChain
+	receivingChain  *receivingchain.ReceivingChain
+	config          *Config
 }
 
 // NewRecipient creates a receiving participant in the conversation.
+//
+// TODO: try to reduce arguments count.
 func NewRecipient(
 	localPrivateKey *keys.Private,
 	rootKey *keys.Root,
 	sendingChainNextHeaderKey *keys.Header,
 	receivingChainNextHeaderKey *keys.Header,
+	config *Config,
 ) *Participant {
 	return newParticipant(
 		localPrivateKey,
 		nil,
-		chains.NewRoot(rootKey),
-		chains.NewSending(nil, nil, sendingChainNextHeaderKey),
-		chains.NewReceiving(receivingChainNextHeaderKey),
+		rootchain.New(rootKey, config.rootChainConfig),
+		sendingchain.New(nil, nil, sendingChainNextHeaderKey, config.sendingChainConfig),
+		receivingchain.New(receivingChainNextHeaderKey, config.receivingChainConfig),
+		config,
 	)
 }
 
 // NewSender creates a sending participant in the conversation.
+//
+// TODO: try to reduce arguments count.
 func NewSender(
-	provider Provider,
 	remotePublicKey *keys.Public,
 	rootKey *keys.Root,
 	sendingChainHeaderKey *keys.Header,
 	receivingChainNextHeaderKey *keys.Header,
+	config *Config,
 ) (*Participant, error) {
-	if provider == nil {
-		return nil, fmt.Errorf("%w: provider is nil", ErrInvalidValue)
+	if config == nil {
+		return nil, fmt.Errorf("%w: config is nil", ErrInvalidValue)
 	}
 
-	localPrivateKey, err := provider.GeneratePrivateKey()
-	if err != nil {
-		return nil, fmt.Errorf("%w: generate private key: %w", ErrProvider, err)
+	if config.crypto == nil {
+		return nil, fmt.Errorf("%w: config crypto is nil", ErrInvalidValue)
 	}
 
-	sharedSecretKey, err := provider.ComputeSharedSecretKey(localPrivateKey, remotePublicKey)
+	localPrivateKey, err := config.crypto.GeneratePrivateKey()
 	if err != nil {
-		return nil, fmt.Errorf("%w: compute shared secret key: %w", ErrProvider, err)
+		return nil, fmt.Errorf("%w: generate private key: %w", ErrCrypto, err)
 	}
 
-	rootChain := chains.NewRoot(rootKey)
-
-	sendingChainKey, sendingChainNextHeaderKey, err := rootChain.Forward(provider, sharedSecretKey)
+	sharedSecretKey, err := config.crypto.ComputeSharedSecretKey(localPrivateKey, remotePublicKey)
 	if err != nil {
-		return nil, fmt.Errorf("%w: root: %w", ErrForwardChain, err)
+		return nil, fmt.Errorf("%w: compute shared secret key: %w", ErrCrypto, err)
+	}
+
+	rootChain := rootchain.New(rootKey, config.rootChainConfig)
+
+	sendingChainKey, sendingChainNextHeaderKey, err := rootChain.Advance(sharedSecretKey)
+	if err != nil {
+		return nil, fmt.Errorf("%w: root: %w", ErrAdvanceChain, err)
 	}
 
 	participant := newParticipant(
 		localPrivateKey,
 		remotePublicKey,
 		rootChain,
-		chains.NewSending(sendingChainKey, sendingChainHeaderKey, sendingChainNextHeaderKey),
-		chains.NewReceiving(receivingChainNextHeaderKey),
+		sendingchain.New(sendingChainKey, sendingChainHeaderKey, sendingChainNextHeaderKey, config.sendingChainConfig),
+		receivingchain.New(receivingChainNextHeaderKey, config.receivingChainConfig),
+		config,
 	)
 
 	return participant, nil
@@ -75,9 +89,10 @@ func NewSender(
 func newParticipant(
 	localPrivateKey *keys.Private,
 	remotePublicKey *keys.Public,
-	rootChain *chains.Root,
-	sendingChain *chains.Sending,
-	receivingChain *chains.Receiving,
+	rootChain *rootchain.RootChain,
+	sendingChain *sendingchain.SendingChain,
+	receivingChain *receivingchain.ReceivingChain,
+	config *Config,
 ) *Participant {
 	return &Participant{
 		localPrivateKey: localPrivateKey,
@@ -85,5 +100,6 @@ func newParticipant(
 		rootChain:       rootChain,
 		sendingChain:    sendingChain,
 		receivingChain:  receivingChain,
+		config:          config,
 	}
 }

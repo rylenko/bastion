@@ -5,11 +5,10 @@ import (
 	"log"
 
 	"github.com/rylenko/sapphire/pkg/shield"
-	"github.com/rylenko/sapphire/pkg/shieldprovider"
 )
 
 func main() {
-	sender, err := shield.NewSender(shieldprovider.New(), nil, nil, nil, nil)
+	sender, err := shield.NewSender(nil, nil, nil, nil, shield.NewConfig())
 	if err != nil {
 		log.Fatal("new shield sender: ", err)
 	}
