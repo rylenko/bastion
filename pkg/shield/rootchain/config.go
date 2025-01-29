@@ -4,19 +4,22 @@ type Config struct {
 	crypto Crypto
 }
 
-func NewConfig(options ...Option) *Config {
+func NewConfig(options ...ConfigOption) *Config {
 	config := &Config{crypto: newCrypto()}
-
-	for _, option := range options {
-		option(config)
-	}
+	config.ApplyOptions(options...)
 
 	return config
 }
 
-type Option func(config *Config)
+func (config *Config) ApplyOptions(options ...ConfigOption) {
+	for _, option := range options {
+		option(config)
+	}
+}
 
-func WithCrypto(crypto Crypto) Option {
+type ConfigOption func(config *Config)
+
+func WithCrypto(crypto Crypto) ConfigOption {
 	return func(config *Config) {
 		config.crypto = crypto
 	}

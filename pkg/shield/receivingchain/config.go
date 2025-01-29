@@ -8,35 +8,38 @@ type Config struct {
 	skippedMessageKeys   SkippedMessageKeys
 }
 
-func NewConfig(options ...Option) *Config {
+func NewConfig(options ...ConfigOption) *Config {
 	config := &Config{
 		crypto:               newCrypto(),
 		messageKeysSkipLimit: messageKeysSkipLimit,
 		skippedMessageKeys:   newSkippedMessageKeys(),
 	}
-
-	for _, option := range options {
-		option(config)
-	}
+	config.ApplyOptions(options...)
 
 	return config
 }
 
-type Option func(config *Config)
+func (config *Config) ApplyOptions(options ...ConfigOption) {
+	for _, option := range options {
+		option(config)
+	}
+}
 
-func WithCrypto(crypto Crypto) Option {
+type ConfigOption func(config *Config)
+
+func WithCrypto(crypto Crypto) ConfigOption {
 	return func(config *Config) {
 		config.crypto = crypto
 	}
 }
 
-func WithMessageKeysSkipLimit(limit uint32) Option {
+func WithMessageKeysSkipLimit(limit uint32) ConfigOption {
 	return func(config *Config) {
 		config.messageKeysSkipLimit = limit
 	}
 }
 
-func WithSkippedMessageKeys(storage SkippedMessageKeys) Option {
+func WithSkippedMessageKeys(storage SkippedMessageKeys) ConfigOption {
 	return func(config *Config) {
 		config.skippedMessageKeys = storage
 	}

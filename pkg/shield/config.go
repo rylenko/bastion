@@ -6,15 +6,15 @@ import (
 	"github.com/rylenko/sapphire/pkg/shield/sendingchain"
 )
 
-type Config struct {
+type config struct {
 	crypto               Crypto
 	receivingChainConfig *receivingchain.Config
 	rootChainConfig      *rootchain.Config
 	sendingChainConfig   *sendingchain.Config
 }
 
-func NewConfig(options ...Option) *Config {
-	config := &Config{
+func newConfig(options ...ConfigOption) *config {
+	config := &config{
 		crypto:               newCrypto(),
 		receivingChainConfig: receivingchain.NewConfig(),
 		rootChainConfig:      rootchain.NewConfig(),
@@ -28,28 +28,40 @@ func NewConfig(options ...Option) *Config {
 	return config
 }
 
-type Option func(config *Config)
+type ConfigOption func(config *config)
 
-func WithCrypto(crypto Crypto) Option {
-	return func(config *Config) {
+func WithCrypto(crypto Crypto) ConfigOption {
+	return func(config *config) {
 		config.crypto = crypto
 	}
 }
 
-func WithReceivingChainConfig(receivingChainConfig *receivingchain.Config) Option {
-	return func(config *Config) {
-		config.receivingChainConfig = receivingChainConfig
+func WithMessageKeysSkipLimit(limit uint32) ConfigOption {
+	return func(config *config) {
+		config.receivingChainConfig.ApplyOptions(receivingchain.WithMessageKeysSkipLimit(limit))
 	}
 }
 
-func WithRootChainConfig(rootChainConfig *rootchain.Config) Option {
-	return func(config *Config) {
-		config.rootChainConfig = rootChainConfig
+func WithReceivingChainCrypto(crypto receivingchain.Crypto) ConfigOption {
+	return func(config *config) {
+		config.receivingChainConfig.ApplyOptions(receivingchain.WithCrypto(crypto))
 	}
 }
 
-func WithSendingChainConfig(sendingChainConfig *sendingchain.Config) Option {
-	return func(config *Config) {
-		config.sendingChainConfig = sendingChainConfig
+func WithRootChainCrypto(crypto rootchain.Crypto) ConfigOption {
+	return func(config *config) {
+		config.rootChainConfig.ApplyOptions(rootchain.WithCrypto(crypto))
+	}
+}
+
+func WithSendingChainCrypto(crypto sendingchain.Crypto) ConfigOption {
+	return func(config *config) {
+		config.sendingChainConfig.ApplyOptions(sendingchain.WithCrypto(crypto))
+	}
+}
+
+func WithSkippedMessageKeys(keys receivingchain.SkippedMessageKeys) ConfigOption {
+	return func(config *config) {
+		config.receivingChainConfig.ApplyOptions(receivingchain.WithSkippedMessageKeys(keys))
 	}
 }

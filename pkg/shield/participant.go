@@ -16,7 +16,7 @@ type Participant struct {
 	rootChain       *rootchain.RootChain
 	sendingChain    *sendingchain.SendingChain
 	receivingChain  *receivingchain.ReceivingChain
-	config          *Config
+	config          *config
 }
 
 // NewRecipient creates a receiving participant in the conversation.
@@ -27,8 +27,10 @@ func NewRecipient(
 	rootKey *keys.Root,
 	sendingChainNextHeaderKey *keys.Header,
 	receivingChainNextHeaderKey *keys.Header,
-	config *Config,
+	configOptions ...ConfigOption,
 ) *Participant {
+	config := newConfig(configOptions...)
+
 	return newParticipant(
 		localPrivateKey,
 		nil,
@@ -47,11 +49,9 @@ func NewSender(
 	rootKey *keys.Root,
 	sendingChainHeaderKey *keys.Header,
 	receivingChainNextHeaderKey *keys.Header,
-	config *Config,
+	configOptions ...ConfigOption,
 ) (*Participant, error) {
-	if config == nil {
-		return nil, fmt.Errorf("%w: config is nil", ErrInvalidValue)
-	}
+	config := newConfig(configOptions...)
 
 	if config.crypto == nil {
 		return nil, fmt.Errorf("%w: config crypto is nil", ErrInvalidValue)
@@ -92,7 +92,7 @@ func newParticipant(
 	rootChain *rootchain.RootChain,
 	sendingChain *sendingchain.SendingChain,
 	receivingChain *receivingchain.ReceivingChain,
-	config *Config,
+	config *config,
 ) *Participant {
 	return &Participant{
 		localPrivateKey: localPrivateKey,
