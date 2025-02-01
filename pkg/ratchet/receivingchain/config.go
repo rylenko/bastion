@@ -3,16 +3,16 @@ package receivingchain
 const messageKeysSkipLimit = 1024
 
 type Config struct {
-	crypto               Crypto
-	messageKeysSkipLimit uint32
-	skippedMessageKeys   SkippedMessageKeys
+	crypto                    Crypto
+	messageKeysSkipLimit      uint32
+	skippedMessageKeysStorage SkippedMessageKeysStorage
 }
 
 func NewConfig(options ...ConfigOption) *Config {
 	config := &Config{
-		crypto:               newCrypto(),
-		messageKeysSkipLimit: messageKeysSkipLimit,
-		skippedMessageKeys:   newSkippedMessageKeys(),
+		crypto:                    newCrypto(),
+		messageKeysSkipLimit:      messageKeysSkipLimit,
+		skippedMessageKeysStorage: newSkippedMessageKeysStorage(),
 	}
 	config.ApplyOptions(options...)
 
@@ -39,8 +39,8 @@ func WithMessageKeysSkipLimit(limit uint32) ConfigOption {
 	}
 }
 
-func WithSkippedMessageKeys(storage SkippedMessageKeys) ConfigOption {
+func WithSkippedMessageKeysStorage(storage SkippedMessageKeysStorage) ConfigOption {
 	return func(config *Config) {
-		config.skippedMessageKeys = storage
+		config.skippedMessageKeysStorage = storage
 	}
 }

@@ -60,8 +60,8 @@ func WithSendingChainCrypto(crypto sendingchain.Crypto) ConfigOption {
 	}
 }
 
-func WithSkippedMessageKeys(keys receivingchain.SkippedMessageKeys) ConfigOption {
+func WithSkippedMessageKeysStorage(keys receivingchain.SkippedMessageKeysStorage) ConfigOption {
 	return func(config *config) {
-		config.receivingChainConfig.ApplyOptions(receivingchain.WithSkippedMessageKeys(keys))
+		config.receivingChainConfig.ApplyOptions(receivingchain.WithSkippedMessageKeysStorage(keys))
 	}
 }
