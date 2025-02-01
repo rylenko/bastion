@@ -8,7 +8,7 @@ import (
 	"golang.org/x/crypto/blake2b"
 	"golang.org/x/crypto/hkdf"
 
-	"github.com/rylenko/sapphire/pkg/shield/keys"
+	"github.com/rylenko/bastion/pkg/ratchet/keys"
 )
 
 type Crypto interface {

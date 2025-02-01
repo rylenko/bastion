@@ -1,12 +1,12 @@
-package shield
+package ratchet
 
 import (
 	"fmt"
 
-	"github.com/rylenko/sapphire/pkg/shield/keys"
-	"github.com/rylenko/sapphire/pkg/shield/receivingchain"
-	"github.com/rylenko/sapphire/pkg/shield/rootchain"
-	"github.com/rylenko/sapphire/pkg/shield/sendingchain"
+	"github.com/rylenko/bastion/pkg/ratchet/keys"
+	"github.com/rylenko/bastion/pkg/ratchet/receivingchain"
+	"github.com/rylenko/bastion/pkg/ratchet/rootchain"
+	"github.com/rylenko/bastion/pkg/ratchet/sendingchain"
 )
 
 // Participant is a participant in the coversation.

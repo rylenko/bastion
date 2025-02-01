@@ -1,11 +1,11 @@
-package shield
+package ratchet
 
 import (
 	"crypto/ecdh"
 	"crypto/rand"
 	"fmt"
 
-	"github.com/rylenko/sapphire/pkg/shield/keys"
+	"github.com/rylenko/bastion/pkg/ratchet/keys"
 )
 
 type Crypto interface {

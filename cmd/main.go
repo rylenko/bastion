@@ -4,20 +4,20 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/rylenko/sapphire/pkg/shield"
+	"github.com/rylenko/bastion/pkg/ratchet"
 )
 
 func main() {
-	sender, err := shield.NewSender(
+	sender, err := ratchet.NewSender(
 		nil,
 		nil,
 		nil,
 		nil,
-		shield.WithMessageKeysSkipLimit(0),
-		shield.WithSkippedMessageKeys(struct{}{}),
+		ratchet.WithMessageKeysSkipLimit(0),
+		ratchet.WithSkippedMessageKeys(struct{}{}),
 	)
 	if err != nil {
-		log.Fatal("new shield sender: ", err)
+		log.Fatal("new ratchet sender: ", err)
 	}
 
 	fmt.Println(sender)

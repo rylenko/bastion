@@ -1,4 +1,4 @@
-module github.com/rylenko/sapphire/pkg/shield
+module github.com/rylenko/bastion/pkg/ratchet
 
 go 1.23.4
 

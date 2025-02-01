@@ -1,9 +1,9 @@
-package shield
+package ratchet
 
 import (
-	"github.com/rylenko/sapphire/pkg/shield/receivingchain"
-	"github.com/rylenko/sapphire/pkg/shield/rootchain"
-	"github.com/rylenko/sapphire/pkg/shield/sendingchain"
+	"github.com/rylenko/bastion/pkg/ratchet/receivingchain"
+	"github.com/rylenko/bastion/pkg/ratchet/rootchain"
+	"github.com/rylenko/bastion/pkg/ratchet/sendingchain"
 )
 
 type config struct {

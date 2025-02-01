@@ -3,7 +3,7 @@ package receivingchain
 import (
 	"fmt"
 
-	"github.com/rylenko/sapphire/pkg/shield/keys"
+	"github.com/rylenko/bastion/pkg/ratchet/keys"
 )
 
 type ReceivingChain struct {
