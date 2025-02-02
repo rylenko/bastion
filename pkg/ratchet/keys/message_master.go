@@ -8,6 +8,10 @@ func NewMessageMaster(bytes []byte) *MessageMaster {
 	return &MessageMaster{bytes: bytes}
 }
 
-func (key *MessageMaster) Bytes() []byte {
-	return key.bytes
+func (m *MessageMaster) Bytes() []byte {
+	return m.bytes
+}
+
+func (m *MessageMaster) Clone() *MessageMaster {
+	return NewMessageMaster(cloneBytes(m.bytes))
 }

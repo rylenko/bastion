@@ -16,7 +16,7 @@ func NewCrypto() Crypto {
 	return Crypto{}
 }
 
-func (crypto Crypto) AdvanceChain(masterKey *keys.MessageMaster) (*keys.MessageMaster, *keys.Message, error) {
+func (c Crypto) AdvanceChain(masterKey *keys.MessageMaster) (*keys.MessageMaster, *keys.Message, error) {
 	hasher, err := blake2b.New512(nil)
 	if err != nil {
 		return nil, nil, fmt.Errorf("%w: %w", ErrNewHash, err)

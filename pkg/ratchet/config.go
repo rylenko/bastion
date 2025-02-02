@@ -14,7 +14,7 @@ type config struct {
 }
 
 func newConfig(options ...ConfigOption) *config {
-	config := &config{
+	cfg := &config{
 		crypto:               newCrypto(),
 		receivingChainConfig: receivingchain.NewConfig(),
 		rootChainConfig:      rootchain.NewConfig(),
@@ -22,46 +22,46 @@ func newConfig(options ...ConfigOption) *config {
 	}
 
 	for _, option := range options {
-		option(config)
+		option(cfg)
 	}
 
-	return config
+	return cfg
 }
 
-type ConfigOption func(config *config)
+type ConfigOption func(cfg *config)
 
 func WithCrypto(crypto Crypto) ConfigOption {
-	return func(config *config) {
-		config.crypto = crypto
+	return func(cfg *config) {
+		cfg.crypto = crypto
 	}
 }
 
 func WithMessageKeysSkipLimit(limit uint32) ConfigOption {
-	return func(config *config) {
-		config.receivingChainConfig.ApplyOptions(receivingchain.WithMessageKeysSkipLimit(limit))
+	return func(cfg *config) {
+		cfg.receivingChainConfig.ApplyOptions(receivingchain.WithMessageKeysSkipLimit(limit))
 	}
 }
 
 func WithReceivingChainCrypto(crypto receivingchain.Crypto) ConfigOption {
-	return func(config *config) {
-		config.receivingChainConfig.ApplyOptions(receivingchain.WithCrypto(crypto))
+	return func(cfg *config) {
+		cfg.receivingChainConfig.ApplyOptions(receivingchain.WithCrypto(crypto))
 	}
 }
 
 func WithRootChainCrypto(crypto rootchain.Crypto) ConfigOption {
-	return func(config *config) {
-		config.rootChainConfig.ApplyOptions(rootchain.WithCrypto(crypto))
+	return func(cfg *config) {
+		cfg.rootChainConfig.ApplyOptions(rootchain.WithCrypto(crypto))
 	}
 }
 
 func WithSendingChainCrypto(crypto sendingchain.Crypto) ConfigOption {
-	return func(config *config) {
-		config.sendingChainConfig.ApplyOptions(sendingchain.WithCrypto(crypto))
+	return func(cfg *config) {
+		cfg.sendingChainConfig.ApplyOptions(sendingchain.WithCrypto(crypto))
 	}
 }
 
 func WithSkippedMessageKeysStorage(keys receivingchain.SkippedMessageKeysStorage) ConfigOption {
-	return func(config *config) {
-		config.receivingChainConfig.ApplyOptions(receivingchain.WithSkippedMessageKeysStorage(keys))
+	return func(cfg *config) {
+		cfg.receivingChainConfig.ApplyOptions(receivingchain.WithSkippedMessageKeysStorage(keys))
 	}
 }

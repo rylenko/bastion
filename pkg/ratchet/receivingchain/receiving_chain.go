@@ -14,39 +14,53 @@ type ReceivingChain struct {
 	config            *Config
 }
 
-func New(nextHeaderKey *keys.Header, config *Config) *ReceivingChain {
+func New(
+	masterKey *keys.MessageMaster,
+	headerKey *keys.Header,
+	nextHeaderKey *keys.Header,
+	nextMessageNumber uint32,
+	config *Config,
+) *ReceivingChain {
 	return &ReceivingChain{
-		masterKey:         nil,
-		headerKey:         nil,
+		masterKey:         masterKey,
+		headerKey:         headerKey,
 		nextHeaderKey:     nextHeaderKey,
-		nextMessageNumber: 0,
+		nextMessageNumber: nextMessageNumber,
 		config:            config,
 	}
 }
 
-func (chain *ReceivingChain) Advance() (*keys.Message, error) {
-	if chain.config == nil {
+func NewEmpty(nextHeaderKey *keys.Header, config *Config) *ReceivingChain {
+	return New(nil, nil, nextHeaderKey, 0, config)
+}
+
+func (rc *ReceivingChain) Advance() (*keys.Message, error) {
+	if rc.config == nil {
 		return nil, fmt.Errorf("%w: config is nil", ErrInvalidValue)
 	}
 
-	if chain.config.crypto == nil {
+	if rc.config.crypto == nil {
 		return nil, fmt.Errorf("%w: config crypto is nil", ErrInvalidValue)
 	}
 
-	newMasterKey, messageKey, err := chain.config.crypto.AdvanceChain(chain.masterKey)
+	newMasterKey, messageKey, err := rc.config.crypto.AdvanceChain(rc.masterKey)
 	if err != nil {
 		return nil, fmt.Errorf("%w: advance via crypto: %w", ErrCrypto, err)
 	}
 
-	chain.masterKey = newMasterKey
-	chain.nextMessageNumber++
+	rc.masterKey = newMasterKey
+	rc.nextMessageNumber++
 
 	return messageKey, nil
 }
 
-func (chain *ReceivingChain) Upgrade(masterKey *keys.MessageMaster, nextHeaderKey *keys.Header) {
-	chain.masterKey = masterKey
-	chain.headerKey = chain.nextHeaderKey
-	chain.nextHeaderKey = nextHeaderKey
-	chain.nextMessageNumber = 0
+func (rc *ReceivingChain) Clone() *ReceivingChain {
+	return New(rc.masterKey.Clone(), rc.headerKey.Clone(), rc.nextHeaderKey.Clone(), rc.nextMessageNumber, rc.config)
+}
+
+func (rc *ReceivingChain) Upgrade(masterKey *keys.MessageMaster, nextHeaderKey *keys.Header) {
+	rc.masterKey = masterKey
+	rc.headerKey = rc.nextHeaderKey
+	rc.nextHeaderKey = nextHeaderKey
+	rc.nextMessageNumber = 0
 }

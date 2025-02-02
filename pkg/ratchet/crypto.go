@@ -21,15 +21,12 @@ func newCrypto() Crypto {
 	return &crypto{curve: ecdh.X25519()}
 }
 
-func (crypto *crypto) ComputeSharedSecretKey(
-	privateKey *keys.Private,
-	publicKey *keys.Public,
-) (*keys.SharedSecret, error) {
+func (c *crypto) ComputeSharedSecretKey(privateKey *keys.Private, publicKey *keys.Public) (*keys.SharedSecret, error) {
 	if privateKey == nil {
 		return nil, fmt.Errorf("%w: private key is nil", ErrInvalidValue)
 	}
 
-	foreignPrivateKey, err := crypto.curve.NewPrivateKey(privateKey.Bytes())
+	foreignPrivateKey, err := c.curve.NewPrivateKey(privateKey.Bytes())
 	if err != nil {
 		return nil, fmt.Errorf("%w: private key: %w", ErrForeignType, err)
 	}
@@ -38,7 +35,7 @@ func (crypto *crypto) ComputeSharedSecretKey(
 		return nil, fmt.Errorf("%w: public key is nil", ErrInvalidValue)
 	}
 
-	foreignPublicKey, err := crypto.curve.NewPublicKey(publicKey.Bytes())
+	foreignPublicKey, err := c.curve.NewPublicKey(publicKey.Bytes())
 	if err != nil {
 		return nil, fmt.Errorf("%w: public key: %w", ErrForeignType, err)
 	}
@@ -53,8 +50,8 @@ func (crypto *crypto) ComputeSharedSecretKey(
 	return sharedSecretKey, nil
 }
 
-func (crypto *crypto) GeneratePrivateKey() (*keys.Private, error) {
-	foreignKey, err := crypto.curve.GenerateKey(rand.Reader)
+func (c *crypto) GeneratePrivateKey() (*keys.Private, error) {
+	foreignKey, err := c.curve.GenerateKey(rand.Reader)
 	if err != nil {
 		return nil, err
 	}

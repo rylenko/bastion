@@ -9,12 +9,9 @@ import (
 	"github.com/rylenko/bastion/pkg/ratchet/sendingchain"
 )
 
-// Participant is a participant in the coversation.
+// Participant is the participant of the conversation.
 //
-// TODO: Make the state error-resistant, i.e. save any changes only after successful operations. For example, make a
-// wrapper around the state. Then outside the wrapper make a method update(func(state *state) error), which would clone
-// the current state and send it to the passed callback. After the callback successfully completes, it would set the new
-// state. Maybe we should to add a lock for parallel updating.
+// Please note that the structure is not safe for concurrent programs.
 type Participant struct {
 	localPrivateKey *keys.Private
 	remotePublicKey *keys.Public
@@ -24,8 +21,6 @@ type Participant struct {
 	config          *config
 }
 
-// NewRecipient creates a receiving participant in the conversation.
-//
 // TODO: try to reduce arguments count.
 func NewRecipient(
 	localPrivateKey *keys.Private,
@@ -40,14 +35,12 @@ func NewRecipient(
 		localPrivateKey,
 		nil,
 		rootchain.New(rootKey, config.rootChainConfig),
-		sendingchain.New(nil, nil, sendingChainNextHeaderKey, config.sendingChainConfig),
-		receivingchain.New(receivingChainNextHeaderKey, config.receivingChainConfig),
+		sendingchain.NewEmpty(nil, nil, sendingChainNextHeaderKey, config.sendingChainConfig),
+		receivingchain.NewEmpty(receivingChainNextHeaderKey, config.receivingChainConfig),
 		config,
 	)
 }
 
-// NewSender creates a sending participant in the conversation.
-//
 // TODO: try to reduce arguments count.
 func NewSender(
 	remotePublicKey *keys.Public,
@@ -83,8 +76,8 @@ func NewSender(
 		localPrivateKey,
 		remotePublicKey,
 		rootChain,
-		sendingchain.New(sendingChainKey, sendingChainHeaderKey, sendingChainNextHeaderKey, config.sendingChainConfig),
-		receivingchain.New(receivingChainNextHeaderKey, config.receivingChainConfig),
+		sendingchain.NewEmpty(sendingChainKey, sendingChainHeaderKey, sendingChainNextHeaderKey, config.sendingChainConfig),
+		receivingchain.NewEmpty(receivingChainNextHeaderKey, config.receivingChainConfig),
 		config,
 	)
 
@@ -109,42 +102,76 @@ func newParticipant(
 	}
 }
 
-//nolint:unused // TODO: use
-func (participant *Participant) ratchet(remotePublicKey *keys.Public) error {
-	participant.remotePublicKey = remotePublicKey
+func (p *Participant) Clone() *Participant {
+	return newParticipant(
+		p.localPrivateKey.Clone(),
+		p.remotePublicKey.Clone(),
+		p.rootChain.Clone(),
+		p.sendingChain.Clone(),
+		p.receivingChain.Clone(),
+		p.config,
+	)
+}
 
-	if participant.config.crypto == nil {
+func (p *Participant) Encrypt() error {
+	tx := func(_ *Participant) error {
+		return nil
+	}
+
+	if err := p.updateWithTx(tx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//nolint:unused // TODO: use
+func (p *Participant) ratchet(remotePublicKey *keys.Public) error {
+	p.remotePublicKey = remotePublicKey
+
+	if p.config.crypto == nil {
 		return fmt.Errorf("%w: config crypto is nil", ErrInvalidValue)
 	}
 
-	sharedSecretKey, err := participant.config.crypto.ComputeSharedSecretKey(participant.localPrivateKey, remotePublicKey)
+	sharedSecretKey, err := p.config.crypto.ComputeSharedSecretKey(p.localPrivateKey, remotePublicKey)
 	if err != nil {
 		return fmt.Errorf("%w: compute shared secret key for receiving chain upgrade: %w", ErrCrypto, err)
 	}
 
-	newMasterKey, newNextHeaderKey, err := participant.rootChain.Advance(sharedSecretKey)
+	newMasterKey, newNextHeaderKey, err := p.rootChain.Advance(sharedSecretKey)
 	if err != nil {
 		return fmt.Errorf("%w: root chain for receiving chain upgrade: %w", ErrAdvanceChain, err)
 	}
 
-	participant.receivingChain.Upgrade(newMasterKey, newNextHeaderKey)
+	p.receivingChain.Upgrade(newMasterKey, newNextHeaderKey)
 
-	participant.localPrivateKey, err = participant.config.crypto.GeneratePrivateKey()
+	p.localPrivateKey, err = p.config.crypto.GeneratePrivateKey()
 	if err != nil {
 		return fmt.Errorf("%w: generate new private key: %w", ErrCrypto, err)
 	}
 
-	sharedSecretKey, err = participant.config.crypto.ComputeSharedSecretKey(participant.localPrivateKey, remotePublicKey)
+	sharedSecretKey, err = p.config.crypto.ComputeSharedSecretKey(p.localPrivateKey, remotePublicKey)
 	if err != nil {
 		return fmt.Errorf("%w: compute shared secret key for sending chain upgrade: %w", ErrCrypto, err)
 	}
 
-	newMasterKey, newNextHeaderKey, err = participant.rootChain.Advance(sharedSecretKey)
+	newMasterKey, newNextHeaderKey, err = p.rootChain.Advance(sharedSecretKey)
 	if err != nil {
 		return fmt.Errorf("%w: root chain for sending chain upgrade: %w", ErrAdvanceChain, err)
 	}
 
-	participant.sendingChain.Upgrade(newMasterKey, newNextHeaderKey)
+	p.sendingChain.Upgrade(newMasterKey, newNextHeaderKey)
+
+	return nil
+}
+
+func (p *Participant) updateWithTx(tx func(p *Participant) error) error {
+	newParticipant := p.Clone()
+	if err := tx(newParticipant); err != nil {
+		return err
+	}
+
+	*p = *newParticipant
 
 	return nil
 }

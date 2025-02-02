@@ -11,38 +11,38 @@ type Config struct {
 }
 
 func NewConfig(options ...ConfigOption) *Config {
-	config := &Config{
+	cfg := &Config{
 		crypto:                    messagechaincommon.NewCrypto(),
 		messageKeysSkipLimit:      messageKeysSkipLimit,
 		skippedMessageKeysStorage: newSkippedMessageKeysStorage(),
 	}
-	config.ApplyOptions(options...)
+	cfg.ApplyOptions(options...)
 
-	return config
+	return cfg
 }
 
-func (config *Config) ApplyOptions(options ...ConfigOption) {
+func (cfg *Config) ApplyOptions(options ...ConfigOption) {
 	for _, option := range options {
-		option(config)
+		option(cfg)
 	}
 }
 
-type ConfigOption func(config *Config)
+type ConfigOption func(cfg *Config)
 
 func WithCrypto(crypto Crypto) ConfigOption {
-	return func(config *Config) {
-		config.crypto = crypto
+	return func(c *Config) {
+		c.crypto = crypto
 	}
 }
 
 func WithMessageKeysSkipLimit(limit uint32) ConfigOption {
-	return func(config *Config) {
-		config.messageKeysSkipLimit = limit
+	return func(cfg *Config) {
+		cfg.messageKeysSkipLimit = limit
 	}
 }
 
 func WithSkippedMessageKeysStorage(storage SkippedMessageKeysStorage) ConfigOption {
-	return func(config *Config) {
-		config.skippedMessageKeysStorage = storage
+	return func(cfg *Config) {
+		cfg.skippedMessageKeysStorage = storage
 	}
 }
