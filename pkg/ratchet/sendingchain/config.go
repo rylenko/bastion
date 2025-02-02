@@ -1,11 +1,13 @@
 package sendingchain
 
+import "github.com/rylenko/bastion/pkg/ratchet/messagechaincommon"
+
 type Config struct {
 	crypto Crypto
 }
 
 func NewConfig(options ...ConfigOption) *Config {
-	config := &Config{crypto: newCrypto()}
+	config := &Config{crypto: messagechaincommon.NewCrypto()}
 	config.ApplyOptions(options...)
 
 	return config

@@ -1,5 +1,7 @@
 package receivingchain
 
+import "github.com/rylenko/bastion/pkg/ratchet/messagechaincommon"
+
 const messageKeysSkipLimit = 1024
 
 type Config struct {
@@ -10,7 +12,7 @@ type Config struct {
 
 func NewConfig(options ...ConfigOption) *Config {
 	config := &Config{
-		crypto:                    newCrypto(),
+		crypto:                    messagechaincommon.NewCrypto(),
 		messageKeysSkipLimit:      messageKeysSkipLimit,
 		skippedMessageKeysStorage: newSkippedMessageKeysStorage(),
 	}
