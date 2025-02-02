@@ -45,3 +45,11 @@ func (chain *SendingChain) Advance() (*keys.Message, error) {
 
 	return messageKey, nil
 }
+
+func (chain *SendingChain) Upgrade(masterKey *keys.MessageMaster, nextHeaderKey *keys.Header) {
+	chain.masterKey = masterKey
+	chain.headerKey = chain.nextHeaderKey
+	chain.nextHeaderKey = nextHeaderKey
+	chain.previousSendingChainMessagesCount = chain.nextMessageNumber
+	chain.nextMessageNumber = 0
+}

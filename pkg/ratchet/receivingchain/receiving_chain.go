@@ -43,3 +43,10 @@ func (chain *ReceivingChain) Advance() (*keys.Message, error) {
 
 	return messageKey, nil
 }
+
+func (chain *ReceivingChain) Upgrade(masterKey *keys.MessageMaster, nextHeaderKey *keys.Header) {
+	chain.masterKey = masterKey
+	chain.headerKey = chain.nextHeaderKey
+	chain.nextHeaderKey = nextHeaderKey
+	chain.nextMessageNumber = 0
+}
