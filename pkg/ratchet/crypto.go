@@ -14,7 +14,10 @@ import (
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
 )
 
-var cryptoEncryptHKDFSalt = make([]byte, blake2b.Size)
+var (
+	cryptoEncryptHKDFSalt = make([]byte, blake2b.Size)
+	cryptoEncryptHKDFInfo = []byte("encrypt participant data")
+)
 
 type Crypto interface {
 	ComputeSharedSecretKey(privateKey *keys.Private, publicKey *keys.Public) (*keys.SharedSecret, error)
@@ -65,12 +68,9 @@ func (c *crypto) Encrypt(key *keys.Message, data, auth []byte) ([]byte, error) {
 		return nil, fmt.Errorf("%w: %w", ErrNewHash, err)
 	}
 
-	const hkdfInfo = "Encrypt"
-	hkdf := hkdf.New(func() hash.Hash { return hasher }, key.Bytes(), cryptoEncryptHKDFSalt, []byte(hkdfInfo))
+	hkdf := hkdf.New(func() hash.Hash { return hasher }, key.Bytes(), cryptoEncryptHKDFSalt, cryptoEncryptHKDFInfo)
 
-	const hkdfOutputLen = chacha20poly1305.KeySize + chacha20poly1305.NonceSizeX
-	hkdfOutput := make([]byte, hkdfOutputLen)
-
+	hkdfOutput := make([]byte, chacha20poly1305.KeySize+chacha20poly1305.NonceSizeX)
 	if _, err := io.ReadFull(hkdf, hkdfOutput); err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrKDF, err)
 	}
@@ -83,7 +83,9 @@ func (c *crypto) Encrypt(key *keys.Message, data, auth []byte) ([]byte, error) {
 		return nil, fmt.Errorf("%w: %w", ErrNewCipher, err)
 	}
 
-	return cipher.Seal(nil, cipherNonce, data, auth), nil
+	encryptedData := cipher.Seal(nil, cipherNonce, data, auth)
+
+	return encryptedData, nil
 }
 
 func (c *crypto) GeneratePrivateKey() (*keys.Private, error) {

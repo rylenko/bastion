@@ -11,6 +11,8 @@ import (
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
 )
 
+var cryptoAdvanceChainHKDFInfo = []byte("advance root chain")
+
 type Crypto interface {
 	AdvanceChain(
 		rootKey *keys.Root,
@@ -41,8 +43,8 @@ func (crypto crypto) AdvanceChain(
 		return nil, nil, nil, fmt.Errorf("%w: root key is nil", ErrInvalidValue)
 	}
 
-	const hkdfInfo = "RootChainAdvance"
-	hkdf := hkdf.New(func() hash.Hash { return hasher }, sharedSecretKey.Bytes(), rootKey.Bytes(), []byte(hkdfInfo))
+	hkdf := hkdf.New(
+		func() hash.Hash { return hasher }, sharedSecretKey.Bytes(), rootKey.Bytes(), cryptoAdvanceChainHKDFInfo)
 
 	const hkdfOutputLen = 3 * 32
 	hkdfOutput := make([]byte, hkdfOutputLen)
