@@ -4,12 +4,21 @@ import (
 	"crypto/ecdh"
 	"crypto/rand"
 	"fmt"
+	"hash"
+	"io"
+
+	"golang.org/x/crypto/blake2b"
+	"golang.org/x/crypto/chacha20poly1305"
+	"golang.org/x/crypto/hkdf"
 
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
 )
 
+var cryptoEncryptHKDFSalt = make([]byte, blake2b.Size)
+
 type Crypto interface {
 	ComputeSharedSecretKey(privateKey *keys.Private, publicKey *keys.Public) (*keys.SharedSecret, error)
+	Encrypt(key *keys.Message, data, auth []byte) ([]byte, error)
 	GeneratePrivateKey() (*keys.Private, error)
 }
 
@@ -48,6 +57,33 @@ func (c *crypto) ComputeSharedSecretKey(privateKey *keys.Private, publicKey *key
 	sharedSecretKey := keys.NewSharedSecret(sharedSecretKeyBytes)
 
 	return sharedSecretKey, nil
+}
+
+func (c *crypto) Encrypt(key *keys.Message, data, auth []byte) ([]byte, error) {
+	hasher, err := blake2b.New512(nil)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrNewHash, err)
+	}
+
+	const hkdfInfo = "Encrypt"
+	hkdf := hkdf.New(func() hash.Hash { return hasher }, key.Bytes(), cryptoEncryptHKDFSalt, []byte(hkdfInfo))
+
+	const hkdfOutputLen = chacha20poly1305.KeySize + chacha20poly1305.NonceSizeX
+	hkdfOutput := make([]byte, hkdfOutputLen)
+
+	if _, err := io.ReadFull(hkdf, hkdfOutput); err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrKDF, err)
+	}
+
+	cipherKey := hkdfOutput[:chacha20poly1305.KeySize]
+	cipherNonce := hkdfOutput[len(hkdfOutput)-chacha20poly1305.NonceSizeX:]
+
+	cipher, err := chacha20poly1305.NewX(cipherKey)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrNewCipher, err)
+	}
+
+	return cipher.Seal(nil, cipherNonce, data, auth), nil
 }
 
 func (c *crypto) GeneratePrivateKey() (*keys.Private, error) {

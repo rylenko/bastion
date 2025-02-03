@@ -41,19 +41,19 @@ func (crypto crypto) AdvanceChain(
 		return nil, nil, nil, fmt.Errorf("%w: root key is nil", ErrInvalidValue)
 	}
 
-	const hkdfInfo = "ForwardRootChainHKDFInfo"
+	const hkdfInfo = "RootChainAdvance"
 	hkdf := hkdf.New(func() hash.Hash { return hasher }, sharedSecretKey.Bytes(), rootKey.Bytes(), []byte(hkdfInfo))
 
-	const outputLen = 3 * 32
-	output := make([]byte, outputLen)
+	const hkdfOutputLen = 3 * 32
+	hkdfOutput := make([]byte, hkdfOutputLen)
 
-	if _, err := io.ReadFull(hkdf, output); err != nil {
+	if _, err := io.ReadFull(hkdf, hkdfOutput); err != nil {
 		return nil, nil, nil, fmt.Errorf("%w: %w", ErrKDF, err)
 	}
 
-	newRootKey := keys.NewRoot(output[:32])
-	messageMasterKey := keys.NewMessageMaster(output[32:64])
-	nextHeaderKey := keys.NewHeader(output[64:96])
+	newRootKey := keys.NewRoot(hkdfOutput[:32])
+	messageMasterKey := keys.NewMessageMaster(hkdfOutput[32:64])
+	nextHeaderKey := keys.NewHeader(hkdfOutput[64:96])
 
 	return newRootKey, messageMasterKey, nextHeaderKey, nil
 }

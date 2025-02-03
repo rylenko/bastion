@@ -8,10 +8,10 @@ func NewPublic(bytes []byte) *Public {
 	return &Public{bytes: bytes}
 }
 
-func (p *Public) Bytes() []byte {
-	return p.bytes
+func (pk *Public) Bytes() []byte {
+	return pk.bytes
 }
 
-func (p *Public) Clone() *Public {
-	return NewPublic(cloneBytes(p.bytes))
+func (pk *Public) Clone() *Public {
+	return NewPublic(cloneBytes(pk.bytes))
 }

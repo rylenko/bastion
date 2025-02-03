@@ -8,10 +8,10 @@ func NewPrivate(bytes []byte) *Private {
 	return &Private{bytes: bytes}
 }
 
-func (p *Private) Bytes() []byte {
-	return p.bytes
+func (pk *Private) Bytes() []byte {
+	return pk.bytes
 }
 
-func (p *Private) Clone() *Private {
-	return NewPrivate(cloneBytes(p.bytes))
+func (pk *Private) Clone() *Private {
+	return NewPrivate(cloneBytes(pk.bytes))
 }

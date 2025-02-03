@@ -8,10 +8,10 @@ func NewRoot(bytes []byte) *Root {
 	return &Root{bytes: bytes}
 }
 
-func (r *Root) Bytes() []byte {
-	return r.bytes
+func (rk *Root) Bytes() []byte {
+	return rk.bytes
 }
 
-func (r *Root) Clone() *Root {
-	return NewRoot(cloneBytes(r.bytes))
+func (rk *Root) Clone() *Root {
+	return NewRoot(cloneBytes(rk.bytes))
 }

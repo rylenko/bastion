@@ -8,6 +8,6 @@ func NewSharedSecret(bytes []byte) *SharedSecret {
 	return &SharedSecret{bytes: bytes}
 }
 
-func (s *SharedSecret) Bytes() []byte {
-	return s.bytes
+func (sk *SharedSecret) Bytes() []byte {
+	return sk.bytes
 }
