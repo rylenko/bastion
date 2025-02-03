@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	cryptoEncryptHKDFSalt = make([]byte, blake2b.Size)
 	cryptoEncryptHKDFInfo = []byte("encrypt participant data")
+	cryptoEncryptHKDFSalt = make([]byte, blake2b.Size)
 )
 
 type Crypto interface {
