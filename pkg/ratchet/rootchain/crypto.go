@@ -32,7 +32,7 @@ func (crypto crypto) AdvanceChain(
 ) (*keys.Root, *keys.MessageMaster, *keys.Header, error) {
 	hasher, err := blake2b.New512(nil)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("%w: %w", ErrNewHash, err)
+		return nil, nil, nil, fmt.Errorf("new hash: %w", err)
 	}
 
 	if sharedSecretKey == nil {
@@ -50,7 +50,7 @@ func (crypto crypto) AdvanceChain(
 	hkdfOutput := make([]byte, hkdfOutputLen)
 
 	if _, err := io.ReadFull(hkdf, hkdfOutput); err != nil {
-		return nil, nil, nil, fmt.Errorf("%w: %w", ErrKDF, err)
+		return nil, nil, nil, fmt.Errorf("KDF: %w", err)
 	}
 
 	newRootKey := keys.NewRoot(hkdfOutput[:32])

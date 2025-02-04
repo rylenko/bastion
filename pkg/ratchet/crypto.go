@@ -40,7 +40,7 @@ func (c *crypto) ComputeSharedSecretKey(privateKey *keys.Private, publicKey *key
 
 	foreignPrivateKey, err := c.curve.NewPrivateKey(privateKey.Bytes())
 	if err != nil {
-		return nil, fmt.Errorf("%w: private key: %w", ErrForeignType, err)
+		return nil, fmt.Errorf("map to foreign private key: %w", err)
 	}
 
 	if publicKey == nil {
@@ -49,12 +49,12 @@ func (c *crypto) ComputeSharedSecretKey(privateKey *keys.Private, publicKey *key
 
 	foreignPublicKey, err := c.curve.NewPublicKey(publicKey.Bytes())
 	if err != nil {
-		return nil, fmt.Errorf("%w: public key: %w", ErrForeignType, err)
+		return nil, fmt.Errorf("map to foreign public key: %w", err)
 	}
 
 	sharedSecretKeyBytes, err := foreignPrivateKey.ECDH(foreignPublicKey)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrDiffieHellman, err)
+		return nil, fmt.Errorf("Diffie-Hellman: %w", err)
 	}
 
 	sharedSecretKey := keys.NewSharedSecret(sharedSecretKeyBytes)
@@ -65,14 +65,14 @@ func (c *crypto) ComputeSharedSecretKey(privateKey *keys.Private, publicKey *key
 func (c *crypto) Encrypt(key *keys.Message, data, auth []byte) ([]byte, error) {
 	hasher, err := blake2b.New512(nil)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrNewHash, err)
+		return nil, fmt.Errorf("new hash: %w", err)
 	}
 
 	hkdf := hkdf.New(func() hash.Hash { return hasher }, key.Bytes(), cryptoEncryptHKDFSalt, cryptoEncryptHKDFInfo)
 
 	hkdfOutput := make([]byte, chacha20poly1305.KeySize+chacha20poly1305.NonceSizeX)
 	if _, err := io.ReadFull(hkdf, hkdfOutput); err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrKDF, err)
+		return nil, fmt.Errorf("KDF: %w", err)
 	}
 
 	cipherKey := hkdfOutput[:chacha20poly1305.KeySize]
@@ -80,7 +80,7 @@ func (c *crypto) Encrypt(key *keys.Message, data, auth []byte) ([]byte, error) {
 
 	cipher, err := chacha20poly1305.NewX(cipherKey)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrNewCipher, err)
+		return nil, fmt.Errorf("new cipher: %w", err)
 	}
 
 	encryptedData := cipher.Seal(nil, cipherNonce, data, auth)

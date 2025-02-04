@@ -69,7 +69,7 @@ func NewSender(
 
 	sendingChainKey, sendingChainNextHeaderKey, err := rootChain.Advance(sharedSecretKey)
 	if err != nil {
-		return nil, fmt.Errorf("%w: root: %w", ErrAdvanceChain, err)
+		return nil, fmt.Errorf("advance root chain: %w", err)
 	}
 
 	participant := newParticipant(
@@ -140,7 +140,7 @@ func (p *Participant) ratchet(remotePublicKey *keys.Public) error {
 
 	newMasterKey, newNextHeaderKey, err := p.rootChain.Advance(sharedSecretKey)
 	if err != nil {
-		return fmt.Errorf("%w: root chain for receiving chain upgrade: %w", ErrAdvanceChain, err)
+		return fmt.Errorf("advance root chain for receiving chain upgrade: %w", err)
 	}
 
 	p.receivingChain.Upgrade(newMasterKey, newNextHeaderKey)
@@ -157,7 +157,7 @@ func (p *Participant) ratchet(remotePublicKey *keys.Public) error {
 
 	newMasterKey, newNextHeaderKey, err = p.rootChain.Advance(sharedSecretKey)
 	if err != nil {
-		return fmt.Errorf("%w: root chain for sending chain upgrade: %w", ErrAdvanceChain, err)
+		return fmt.Errorf("advance root chain for sending chain upgrade: %w", err)
 	}
 
 	p.sendingChain.Upgrade(newMasterKey, newNextHeaderKey)
