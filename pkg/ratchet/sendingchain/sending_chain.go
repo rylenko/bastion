@@ -3,6 +3,7 @@ package sendingchain
 import (
 	"fmt"
 
+	"github.com/rylenko/bastion/pkg/ratchet/errors"
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
 )
 
@@ -39,16 +40,16 @@ func NewEmpty(masterKey *keys.MessageMaster, headerKey, nextHeaderKey *keys.Head
 
 func (sc *SendingChain) Advance() (*keys.Message, error) {
 	if sc.config == nil {
-		return nil, fmt.Errorf("%w: config is nil", ErrInvalidValue)
+		return nil, fmt.Errorf("%w: config is nil", errors.ErrInvalidValue)
 	}
 
 	if sc.config.crypto == nil {
-		return nil, fmt.Errorf("%w: config crypto is nil", ErrInvalidValue)
+		return nil, fmt.Errorf("%w: config crypto is nil", errors.ErrInvalidValue)
 	}
 
 	newMasterKey, messageKey, err := sc.config.crypto.AdvanceChain(sc.masterKey)
 	if err != nil {
-		return nil, fmt.Errorf("%w: advance via crypto: %w", ErrCrypto, err)
+		return nil, fmt.Errorf("%w: advance via crypto: %w", errors.ErrCrypto, err)
 	}
 
 	sc.masterKey = newMasterKey

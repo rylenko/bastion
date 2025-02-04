@@ -11,6 +11,7 @@ import (
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/hkdf"
 
+	"github.com/rylenko/bastion/pkg/ratchet/errors"
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
 )
 
@@ -35,7 +36,7 @@ func newCrypto() Crypto {
 
 func (c *crypto) ComputeSharedSecretKey(privateKey *keys.Private, publicKey *keys.Public) (*keys.SharedSecret, error) {
 	if privateKey == nil {
-		return nil, fmt.Errorf("%w: private key is nil", ErrInvalidValue)
+		return nil, fmt.Errorf("%w: private key is nil", errors.ErrInvalidValue)
 	}
 
 	foreignPrivateKey, err := c.curve.NewPrivateKey(privateKey.Bytes())
@@ -44,7 +45,7 @@ func (c *crypto) ComputeSharedSecretKey(privateKey *keys.Private, publicKey *key
 	}
 
 	if publicKey == nil {
-		return nil, fmt.Errorf("%w: public key is nil", ErrInvalidValue)
+		return nil, fmt.Errorf("%w: public key is nil", errors.ErrInvalidValue)
 	}
 
 	foreignPublicKey, err := c.curve.NewPublicKey(publicKey.Bytes())

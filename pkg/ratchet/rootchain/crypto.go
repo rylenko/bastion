@@ -8,6 +8,7 @@ import (
 	"golang.org/x/crypto/blake2b"
 	"golang.org/x/crypto/hkdf"
 
+	"github.com/rylenko/bastion/pkg/ratchet/errors"
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
 )
 
@@ -36,11 +37,11 @@ func (crypto crypto) AdvanceChain(
 	}
 
 	if sharedSecretKey == nil {
-		return nil, nil, nil, fmt.Errorf("%w: shared secret key is nil", ErrInvalidValue)
+		return nil, nil, nil, fmt.Errorf("%w: shared secret key is nil", errors.ErrInvalidValue)
 	}
 
 	if rootKey == nil {
-		return nil, nil, nil, fmt.Errorf("%w: root key is nil", ErrInvalidValue)
+		return nil, nil, nil, fmt.Errorf("%w: root key is nil", errors.ErrInvalidValue)
 	}
 
 	hkdf := hkdf.New(

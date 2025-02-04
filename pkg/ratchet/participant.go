@@ -3,6 +3,7 @@ package ratchet
 import (
 	"fmt"
 
+	"github.com/rylenko/bastion/pkg/ratchet/errors"
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
 	"github.com/rylenko/bastion/pkg/ratchet/receivingchain"
 	"github.com/rylenko/bastion/pkg/ratchet/rootchain"
@@ -52,17 +53,17 @@ func NewSender(
 	config := newConfig(configOptions...)
 
 	if config.crypto == nil {
-		return nil, fmt.Errorf("%w: config crypto is nil", ErrInvalidValue)
+		return nil, fmt.Errorf("%w: config crypto is nil", errors.ErrInvalidValue)
 	}
 
 	localPrivateKey, err := config.crypto.GeneratePrivateKey()
 	if err != nil {
-		return nil, fmt.Errorf("%w: generate private key: %w", ErrCrypto, err)
+		return nil, fmt.Errorf("%w: generate private key: %w", errors.ErrCrypto, err)
 	}
 
 	sharedSecretKey, err := config.crypto.ComputeSharedSecretKey(localPrivateKey, remotePublicKey)
 	if err != nil {
-		return nil, fmt.Errorf("%w: compute shared secret key: %w", ErrCrypto, err)
+		return nil, fmt.Errorf("%w: compute shared secret key: %w", errors.ErrCrypto, err)
 	}
 
 	rootChain := rootchain.New(rootKey, config.rootChainConfig)
@@ -130,12 +131,12 @@ func (p *Participant) ratchet(remotePublicKey *keys.Public) error {
 	p.remotePublicKey = remotePublicKey
 
 	if p.config.crypto == nil {
-		return fmt.Errorf("%w: config crypto is nil", ErrInvalidValue)
+		return fmt.Errorf("%w: config crypto is nil", errors.ErrInvalidValue)
 	}
 
 	sharedSecretKey, err := p.config.crypto.ComputeSharedSecretKey(p.localPrivateKey, remotePublicKey)
 	if err != nil {
-		return fmt.Errorf("%w: compute shared secret key for receiving chain upgrade: %w", ErrCrypto, err)
+		return fmt.Errorf("%w: compute shared secret key for receiving chain upgrade: %w", errors.ErrCrypto, err)
 	}
 
 	newMasterKey, newNextHeaderKey, err := p.rootChain.Advance(sharedSecretKey)
@@ -147,12 +148,12 @@ func (p *Participant) ratchet(remotePublicKey *keys.Public) error {
 
 	p.localPrivateKey, err = p.config.crypto.GeneratePrivateKey()
 	if err != nil {
-		return fmt.Errorf("%w: generate new private key: %w", ErrCrypto, err)
+		return fmt.Errorf("%w: generate new private key: %w", errors.ErrCrypto, err)
 	}
 
 	sharedSecretKey, err = p.config.crypto.ComputeSharedSecretKey(p.localPrivateKey, remotePublicKey)
 	if err != nil {
-		return fmt.Errorf("%w: compute shared secret key for sending chain upgrade: %w", ErrCrypto, err)
+		return fmt.Errorf("%w: compute shared secret key for sending chain upgrade: %w", errors.ErrCrypto, err)
 	}
 
 	newMasterKey, newNextHeaderKey, err = p.rootChain.Advance(sharedSecretKey)

@@ -7,6 +7,7 @@ import (
 
 	"golang.org/x/crypto/blake2b"
 
+	"github.com/rylenko/bastion/pkg/ratchet/errors"
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
 )
 
@@ -23,7 +24,7 @@ func (c Crypto) AdvanceChain(masterKey *keys.MessageMaster) (*keys.MessageMaster
 	}
 
 	if masterKey == nil {
-		return nil, nil, fmt.Errorf("%w: message master key is nil", ErrInvalidValue)
+		return nil, nil, fmt.Errorf("%w: message master key is nil", errors.ErrInvalidValue)
 	}
 
 	mac := hmac.New(func() hash.Hash { return hasher }, masterKey.Bytes())

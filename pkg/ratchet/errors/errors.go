@@ -1,4 +1,4 @@
-package sendingchain
+package errors
 
 import "errors"
 
