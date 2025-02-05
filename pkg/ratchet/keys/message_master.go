@@ -13,5 +13,9 @@ func (mk *MessageMaster) Bytes() []byte {
 }
 
 func (mk *MessageMaster) Clone() *MessageMaster {
+	if mk == nil {
+		return nil
+	}
+
 	return NewMessageMaster(cloneBytes(mk.bytes))
 }

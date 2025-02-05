@@ -13,5 +13,9 @@ func (pk *Private) Bytes() []byte {
 }
 
 func (pk *Private) Clone() *Private {
+	if pk == nil {
+		return nil
+	}
+
 	return NewPrivate(cloneBytes(pk.bytes))
 }

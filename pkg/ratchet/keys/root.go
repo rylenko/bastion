@@ -13,5 +13,9 @@ func (rk *Root) Bytes() []byte {
 }
 
 func (rk *Root) Clone() *Root {
+	if rk == nil {
+		return nil
+	}
+
 	return NewRoot(cloneBytes(rk.bytes))
 }

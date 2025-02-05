@@ -59,6 +59,10 @@ func (sc *SendingChain) Advance() (*keys.Message, error) {
 }
 
 func (sc *SendingChain) Clone() *SendingChain {
+	if sc == nil {
+		return nil
+	}
+
 	return New(
 		sc.masterKey.Clone(),
 		sc.headerKey.Clone(),

@@ -9,5 +9,9 @@ func NewHeader(bytes []byte) *Header {
 }
 
 func (hk *Header) Clone() *Header {
+	if hk == nil {
+		return nil
+	}
+
 	return NewHeader(cloneBytes(hk.bytes))
 }

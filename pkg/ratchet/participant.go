@@ -104,6 +104,10 @@ func newParticipant(
 }
 
 func (p *Participant) Clone() *Participant {
+	if p == nil {
+		return nil
+	}
+
 	return newParticipant(
 		p.localPrivateKey.Clone(),
 		p.remotePublicKey.Clone(),

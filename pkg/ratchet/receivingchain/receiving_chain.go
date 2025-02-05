@@ -56,6 +56,10 @@ func (rc *ReceivingChain) Advance() (*keys.Message, error) {
 }
 
 func (rc *ReceivingChain) Clone() *ReceivingChain {
+	if rc == nil {
+		return nil
+	}
+
 	return New(rc.masterKey.Clone(), rc.headerKey.Clone(), rc.nextHeaderKey.Clone(), rc.nextMessageNumber, rc.config)
 }
 

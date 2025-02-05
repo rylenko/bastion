@@ -13,5 +13,9 @@ func (pk *Public) Bytes() []byte {
 }
 
 func (pk *Public) Clone() *Public {
+	if pk == nil {
+		return nil
+	}
+
 	return NewPublic(cloneBytes(pk.bytes))
 }

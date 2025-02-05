@@ -39,5 +39,9 @@ func (rc *RootChain) Advance(sharedSecretKey *keys.SharedSecret) (*keys.MessageM
 }
 
 func (rc *RootChain) Clone() *RootChain {
+	if rc == nil {
+		return nil
+	}
+
 	return New(rc.key.Clone(), rc.config)
 }
