@@ -170,6 +170,7 @@ func (p *Participant) ratchet(remotePublicKey *keys.Public) error {
 	return nil
 }
 
+// TODO: docs
 func (p *Participant) updateWithTx(tx func(p *Participant) error) error {
 	newParticipant := p.Clone()
 	if err := tx(newParticipant); err != nil {
