@@ -6,7 +6,7 @@ const messageKeysSkipLimit = 1024
 
 type Config struct {
 	crypto                    Crypto
-	messageKeysSkipLimit      uint32
+	messageKeysSkipLimit      uint64
 	skippedMessageKeysStorage SkippedMessageKeysStorage
 }
 
@@ -35,7 +35,7 @@ func WithCrypto(crypto Crypto) ConfigOption {
 	}
 }
 
-func WithMessageKeysSkipLimit(limit uint32) ConfigOption {
+func WithMessageKeysSkipLimit(limit uint64) ConfigOption {
 	return func(cfg *Config) {
 		cfg.messageKeysSkipLimit = limit
 	}

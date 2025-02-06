@@ -11,7 +11,7 @@ type ReceivingChain struct {
 	masterKey         *keys.MessageMaster
 	headerKey         *keys.Header
 	nextHeaderKey     *keys.Header
-	nextMessageNumber uint32
+	nextMessageNumber uint64
 	config            *Config
 }
 
@@ -19,7 +19,7 @@ func New(
 	masterKey *keys.MessageMaster,
 	headerKey *keys.Header,
 	nextHeaderKey *keys.Header,
-	nextMessageNumber uint32,
+	nextMessageNumber uint64,
 	config *Config,
 ) *ReceivingChain {
 	return &ReceivingChain{

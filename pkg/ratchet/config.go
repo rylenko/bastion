@@ -36,7 +36,7 @@ func WithCrypto(crypto Crypto) ConfigOption {
 	}
 }
 
-func WithMessageKeysSkipLimit(limit uint32) ConfigOption {
+func WithMessageKeysSkipLimit(limit uint64) ConfigOption {
 	return func(cfg *config) {
 		cfg.receivingChainConfig.ApplyOptions(receivingchain.WithMessageKeysSkipLimit(limit))
 	}

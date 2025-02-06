@@ -1,6 +1,8 @@
 package keys
 
 func cloneBytes(bytes []byte) []byte {
-	clone := make([]byte, 0, len(bytes))
-	return append(clone, bytes...)
+	clone := make([]byte, len(bytes))
+	copy(clone, bytes)
+
+	return clone
 }

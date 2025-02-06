@@ -8,6 +8,10 @@ func NewHeader(bytes []byte) *Header {
 	return &Header{bytes: bytes}
 }
 
+func (hk *Header) Bytes() []byte {
+	return hk.bytes
+}
+
 func (hk *Header) Clone() *Header {
 	if hk == nil {
 		return nil

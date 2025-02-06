@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/rylenko/bastion/pkg/ratchet/errors"
+	"github.com/rylenko/bastion/pkg/ratchet/header"
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
 	"github.com/rylenko/bastion/pkg/ratchet/receivingchain"
 	"github.com/rylenko/bastion/pkg/ratchet/rootchain"
@@ -15,6 +16,7 @@ import (
 // Please note that the structure is not safe for concurrent programs.
 type Participant struct {
 	localPrivateKey *keys.Private
+	localPublicKey  *keys.Public
 	remotePublicKey *keys.Public
 	rootChain       *rootchain.RootChain
 	sendingChain    *sendingchain.SendingChain
@@ -25,6 +27,7 @@ type Participant struct {
 // TODO: try to reduce arguments count.
 func NewRecipient(
 	localPrivateKey *keys.Private,
+	localPublicKey *keys.Public,
 	rootKey *keys.Root,
 	sendingChainNextHeaderKey *keys.Header,
 	receivingChainNextHeaderKey *keys.Header,
@@ -34,6 +37,7 @@ func NewRecipient(
 
 	return newParticipant(
 		localPrivateKey,
+		localPublicKey,
 		nil,
 		rootchain.New(rootKey, config.rootChainConfig),
 		sendingchain.NewEmpty(nil, nil, sendingChainNextHeaderKey, config.sendingChainConfig),
@@ -56,9 +60,9 @@ func NewSender(
 		return nil, fmt.Errorf("%w: config crypto is nil", errors.ErrInvalidValue)
 	}
 
-	localPrivateKey, err := config.crypto.GeneratePrivateKey()
+	localPrivateKey, localPublicKey, err := config.crypto.GenerateKeyPair()
 	if err != nil {
-		return nil, fmt.Errorf("%w: generate private key: %w", errors.ErrCrypto, err)
+		return nil, fmt.Errorf("%w: generate key pair: %w", errors.ErrCrypto, err)
 	}
 
 	sharedSecretKey, err := config.crypto.ComputeSharedSecretKey(localPrivateKey, remotePublicKey)
@@ -75,6 +79,7 @@ func NewSender(
 
 	participant := newParticipant(
 		localPrivateKey,
+		localPublicKey,
 		remotePublicKey,
 		rootChain,
 		sendingchain.NewEmpty(sendingChainKey, sendingChainHeaderKey, sendingChainNextHeaderKey, config.sendingChainConfig),
@@ -87,6 +92,7 @@ func NewSender(
 
 func newParticipant(
 	localPrivateKey *keys.Private,
+	localPublicKey *keys.Public,
 	remotePublicKey *keys.Public,
 	rootChain *rootchain.RootChain,
 	sendingChain *sendingchain.SendingChain,
@@ -95,6 +101,7 @@ func newParticipant(
 ) *Participant {
 	return &Participant{
 		localPrivateKey: localPrivateKey,
+		localPublicKey:  localPublicKey,
 		remotePublicKey: remotePublicKey,
 		rootChain:       rootChain,
 		sendingChain:    sendingChain,
@@ -110,6 +117,7 @@ func (p *Participant) Clone() *Participant {
 
 	return newParticipant(
 		p.localPrivateKey.Clone(),
+		p.localPublicKey.Clone(),
 		p.remotePublicKey.Clone(),
 		p.rootChain.Clone(),
 		p.sendingChain.Clone(),
@@ -118,16 +126,47 @@ func (p *Participant) Clone() *Participant {
 	)
 }
 
-func (p *Participant) Encrypt() error {
-	tx := func(_ *Participant) error {
+func (p *Participant) Encrypt(data, auth []byte) ([]byte, []byte, error) {
+	var encryptedHeader, encryptedData []byte
+
+	tx := func(newP *Participant) error {
+		messageKey, err := newP.sendingChain.Advance()
+		if err != nil {
+			return fmt.Errorf("advance sending chain: %w", err)
+		}
+
+		header := header.New(
+			newP.localPublicKey,
+			newP.sendingChain.PreviousSendingChainMessagesCount(),
+			newP.sendingChain.NextMessageNumber(),
+		)
+
+		if p.config.crypto == nil {
+			return fmt.Errorf("%w: config crypto is nil", errors.ErrInvalidValue)
+		}
+
+		encryptedHeader, err = newP.config.crypto.EncryptHeader(newP.sendingChain.HeaderKey(), header)
+		if err != nil {
+			return fmt.Errorf("%w: encrypt header: %w", errors.ErrCrypto, err)
+		}
+
+		cryptoAuth := make([]byte, len(encryptedHeader)+len(auth))
+		copy(cryptoAuth[:len(encryptedHeader)], encryptedHeader)
+		copy(cryptoAuth[len(encryptedHeader):], auth)
+
+		encryptedData, err = newP.config.crypto.Encrypt(messageKey, data, cryptoAuth)
+		if err != nil {
+			return fmt.Errorf("%w: encrypt data: %w", errors.ErrCrypto, err)
+		}
+
 		return nil
 	}
 
 	if err := p.updateWithTx(tx); err != nil {
-		return err
+		return nil, nil, err
 	}
 
-	return nil
+	return encryptedHeader, encryptedData, nil
 }
 
 //nolint:unused // TODO: use
@@ -150,9 +189,9 @@ func (p *Participant) ratchet(remotePublicKey *keys.Public) error {
 
 	p.receivingChain.Upgrade(newMasterKey, newNextHeaderKey)
 
-	p.localPrivateKey, err = p.config.crypto.GeneratePrivateKey()
+	p.localPrivateKey, p.localPublicKey, err = p.config.crypto.GenerateKeyPair()
 	if err != nil {
-		return fmt.Errorf("%w: generate new private key: %w", errors.ErrCrypto, err)
+		return fmt.Errorf("%w: generate new key pair: %w", errors.ErrCrypto, err)
 	}
 
 	sharedSecretKey, err = p.config.crypto.ComputeSharedSecretKey(p.localPrivateKey, remotePublicKey)
@@ -170,14 +209,14 @@ func (p *Participant) ratchet(remotePublicKey *keys.Public) error {
 	return nil
 }
 
-// TODO: docs
+// TODO: docs.
 func (p *Participant) updateWithTx(tx func(p *Participant) error) error {
-	newParticipant := p.Clone()
-	if err := tx(newParticipant); err != nil {
+	newP := p.Clone()
+	if err := tx(newP); err != nil {
 		return err
 	}
 
-	*p = *newParticipant
+	*p = *newP
 
 	return nil
 }

@@ -11,8 +11,8 @@ type SendingChain struct {
 	masterKey                         *keys.MessageMaster
 	headerKey                         *keys.Header
 	nextHeaderKey                     *keys.Header
-	nextMessageNumber                 uint32
-	previousSendingChainMessagesCount uint32
+	nextMessageNumber                 uint64
+	previousSendingChainMessagesCount uint64
 	config                            *Config
 }
 
@@ -20,8 +20,8 @@ func New(
 	masterKey *keys.MessageMaster,
 	headerKey *keys.Header,
 	nextHeaderKey *keys.Header,
-	nextMessageNumber uint32,
-	previousSendingChainMessagesCount uint32,
+	nextMessageNumber uint64,
+	previousSendingChainMessagesCount uint64,
 	config *Config,
 ) *SendingChain {
 	return &SendingChain{
@@ -71,6 +71,18 @@ func (sc *SendingChain) Clone() *SendingChain {
 		sc.previousSendingChainMessagesCount,
 		sc.config,
 	)
+}
+
+func (sc *SendingChain) HeaderKey() *keys.Header {
+	return sc.headerKey
+}
+
+func (sc *SendingChain) NextMessageNumber() uint64 {
+	return sc.nextMessageNumber
+}
+
+func (sc *SendingChain) PreviousSendingChainMessagesCount() uint64 {
+	return sc.previousSendingChainMessagesCount
 }
 
 func (sc *SendingChain) Upgrade(masterKey *keys.MessageMaster, nextHeaderKey *keys.Header) {
