@@ -22,11 +22,11 @@ func Decode(bytes []byte) (*Header, error) {
 		return nil, fmt.Errorf("%w: not enough bytes", errors.ErrInvalidValue)
 	}
 
+	messageNumber := binary.LittleEndian.Uint64(bytes[:uint64Size])
+	previousMessagesCount := binary.LittleEndian.Uint64(bytes[uint64Size : 2*uint64Size])
+
 	key := keys.NewPublic(make([]byte, len(bytes)-2*uint64Size))
 	copy(key.Bytes(), bytes[2*uint64Size:])
-
-	previousMessagesCount := binary.LittleEndian.Uint64(bytes[uint64Size : 2*uint64Size])
-	messageNumber := binary.LittleEndian.Uint64(bytes[:uint64Size])
 
 	return New(key, previousMessagesCount, messageNumber), nil
 }
@@ -48,7 +48,7 @@ func (h *Header) Encode() ([]byte, error) {
 
 	binary.LittleEndian.PutUint64(buf[:uint64Size], h.messageNumber)
 	binary.LittleEndian.PutUint64(buf[uint64Size:2*uint64Size], h.previousSendingChainMessagesCount)
-	copy(buf[8:], h.publicKey.Bytes())
+	copy(buf[2*uint64Size:], h.publicKey.Bytes())
 
 	return buf, nil
 }
