@@ -46,8 +46,8 @@ func (h *Header) Encode() ([]byte, error) {
 
 	buf := make([]byte, 2*uint64Size+len(h.publicKey.Bytes()))
 
-	binary.LittleEndian.PutUint64(buf[:8], h.messageNumber)
-	binary.LittleEndian.PutUint64(buf[8:16], h.previousSendingChainMessagesCount)
+	binary.LittleEndian.PutUint64(buf[:uint64Size], h.messageNumber)
+	binary.LittleEndian.PutUint64(buf[uint64Size:2*uint64Size], h.previousSendingChainMessagesCount)
 	copy(buf[8:], h.publicKey.Bytes())
 
 	return buf, nil
