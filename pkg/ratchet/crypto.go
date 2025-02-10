@@ -47,7 +47,7 @@ func (c *crypto) ComputeSharedSecretKey(privateKey *keys.Private, publicKey *key
 		return nil, fmt.Errorf("%w: private key is nil", errors.ErrInvalidValue)
 	}
 
-	foreignPrivateKey, err := c.curve.NewPrivateKey(privateKey.Bytes())
+	foreignPrivateKey, err := c.curve.NewPrivateKey(privateKey.Bytes)
 	if err != nil {
 		return nil, fmt.Errorf("map to foreign private key: %w", err)
 	}
@@ -56,7 +56,7 @@ func (c *crypto) ComputeSharedSecretKey(privateKey *keys.Private, publicKey *key
 		return nil, fmt.Errorf("%w: public key is nil", errors.ErrInvalidValue)
 	}
 
-	foreignPublicKey, err := c.curve.NewPublicKey(publicKey.Bytes())
+	foreignPublicKey, err := c.curve.NewPublicKey(publicKey.Bytes)
 	if err != nil {
 		return nil, fmt.Errorf("map to foreign public key: %w", err)
 	}
@@ -77,7 +77,7 @@ func (c *crypto) Encrypt(key *keys.Message, data, auth []byte) ([]byte, error) {
 		return nil, fmt.Errorf("new hash: %w", err)
 	}
 
-	hkdf := hkdf.New(func() hash.Hash { return hasher }, key.Bytes(), cryptoEncryptHKDFSalt, cryptoEncryptHKDFInfo)
+	hkdf := hkdf.New(func() hash.Hash { return hasher }, key.Bytes, cryptoEncryptHKDFSalt, cryptoEncryptHKDFInfo)
 
 	hkdfOutput := make([]byte, chacha20poly1305.KeySize+chacha20poly1305.NonceSizeX)
 	if _, err := io.ReadFull(hkdf, hkdfOutput); err != nil {
@@ -111,9 +111,9 @@ func (c *crypto) EncryptHeader(key *keys.Header, header *header.Header) ([]byte,
 	// repeat the nonce when encrypting. Here, the HKDF is used based on the message number and the accepted header key.
 	// This pair is unique, since the header key is unique, and after resetting the message number for the next sending
 	// chain, we will get a different header key.
-	hkdfKey := make([]byte, uint64Size+len(key.Bytes()))
-	binary.LittleEndian.PutUint64(hkdfKey[:uint64Size], header.MessageNumber())
-	copy(hkdfKey[uint64Size:], key.Bytes())
+	hkdfKey := make([]byte, uint64Size+len(key.Bytes))
+	binary.LittleEndian.PutUint64(hkdfKey[:uint64Size], header.MessageNumber)
+	copy(hkdfKey[uint64Size:], key.Bytes)
 
 	hkdf := hkdf.New(func() hash.Hash { return hasher }, hkdfKey, cryptoEncryptHeaderHKDFSalt, cryptoEncryptHeaderHKDFInfo)
 

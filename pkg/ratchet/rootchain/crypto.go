@@ -45,7 +45,7 @@ func (crypto crypto) AdvanceChain(
 	}
 
 	hkdf := hkdf.New(
-		func() hash.Hash { return hasher }, sharedSecretKey.Bytes(), rootKey.Bytes(), cryptoAdvanceChainHKDFInfo)
+		func() hash.Hash { return hasher }, sharedSecretKey.Bytes, rootKey.Bytes, cryptoAdvanceChainHKDFInfo)
 
 	const hkdfOutputLen = 3 * 32
 	hkdfOutput := make([]byte, hkdfOutputLen)

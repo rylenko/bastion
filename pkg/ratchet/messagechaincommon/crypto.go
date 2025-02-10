@@ -27,7 +27,7 @@ func (c Crypto) AdvanceChain(masterKey *keys.MessageMaster) (*keys.MessageMaster
 		return nil, nil, fmt.Errorf("%w: message master key is nil", errors.ErrInvalidValue)
 	}
 
-	mac := hmac.New(func() hash.Hash { return hasher }, masterKey.Bytes())
+	mac := hmac.New(func() hash.Hash { return hasher }, masterKey.Bytes)
 
 	const masterKeyByte = 0x02
 	if _, err := mac.Write([]byte{masterKeyByte}); err != nil {

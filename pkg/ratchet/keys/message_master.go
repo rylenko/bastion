@@ -1,15 +1,11 @@
 package keys
 
 type MessageMaster struct {
-	bytes []byte
+	Bytes []byte
 }
 
 func NewMessageMaster(bytes []byte) *MessageMaster {
-	return &MessageMaster{bytes: bytes}
-}
-
-func (mk *MessageMaster) Bytes() []byte {
-	return mk.bytes
+	return &MessageMaster{Bytes: bytes}
 }
 
 func (mk *MessageMaster) Clone() *MessageMaster {
@@ -17,5 +13,5 @@ func (mk *MessageMaster) Clone() *MessageMaster {
 		return nil
 	}
 
-	return NewMessageMaster(cloneBytes(mk.bytes))
+	return NewMessageMaster(cloneBytes(mk.Bytes))
 }

@@ -1,15 +1,11 @@
 package keys
 
 type Private struct {
-	bytes []byte
+	Bytes []byte
 }
 
 func NewPrivate(bytes []byte) *Private {
-	return &Private{bytes: bytes}
-}
-
-func (pk *Private) Bytes() []byte {
-	return pk.bytes
+	return &Private{Bytes: bytes}
 }
 
 func (pk *Private) Clone() *Private {
@@ -17,5 +13,5 @@ func (pk *Private) Clone() *Private {
 		return nil
 	}
 
-	return NewPrivate(cloneBytes(pk.bytes))
+	return NewPrivate(cloneBytes(pk.Bytes))
 }

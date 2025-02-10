@@ -1,13 +1,9 @@
 package keys
 
 type Message struct {
-	bytes []byte
+	Bytes []byte
 }
 
 func NewMessage(bytes []byte) *Message {
-	return &Message{bytes: bytes}
-}
-
-func (mk *Message) Bytes() []byte {
-	return mk.bytes
+	return &Message{Bytes: bytes}
 }

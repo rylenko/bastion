@@ -12,9 +12,9 @@ import (
 var uint64Size = int(unsafe.Sizeof(uint64(0)))
 
 type Header struct {
-	publicKey                         *keys.Public
-	previousSendingChainMessagesCount uint64
-	messageNumber                     uint64
+	PublicKey                         *keys.Public
+	PreviousSendingChainMessagesCount uint64
+	MessageNumber                     uint64
 }
 
 func Decode(bytes []byte) (*Header, error) {
@@ -26,33 +26,29 @@ func Decode(bytes []byte) (*Header, error) {
 	previousMessagesCount := binary.LittleEndian.Uint64(bytes[uint64Size : 2*uint64Size])
 
 	key := keys.NewPublic(make([]byte, len(bytes)-2*uint64Size))
-	copy(key.Bytes(), bytes[2*uint64Size:])
+	copy(key.Bytes, bytes[2*uint64Size:])
 
 	return New(key, previousMessagesCount, messageNumber), nil
 }
 
 func New(publicKey *keys.Public, previousSendingChainMessagesCount, messageNumber uint64) *Header {
 	return &Header{
-		publicKey:                         publicKey,
-		previousSendingChainMessagesCount: previousSendingChainMessagesCount,
-		messageNumber:                     messageNumber,
+		PublicKey:                         publicKey,
+		PreviousSendingChainMessagesCount: previousSendingChainMessagesCount,
+		MessageNumber:                     messageNumber,
 	}
 }
 
 func (h *Header) Encode() ([]byte, error) {
-	if h.publicKey == nil {
+	if h.PublicKey == nil {
 		return nil, fmt.Errorf("%w: public key is nil", errors.ErrInvalidValue)
 	}
 
-	buf := make([]byte, 2*uint64Size+len(h.publicKey.Bytes()))
+	buf := make([]byte, 2*uint64Size+len(h.PublicKey.Bytes))
 
-	binary.LittleEndian.PutUint64(buf[:uint64Size], h.messageNumber)
-	binary.LittleEndian.PutUint64(buf[uint64Size:2*uint64Size], h.previousSendingChainMessagesCount)
-	copy(buf[2*uint64Size:], h.publicKey.Bytes())
+	binary.LittleEndian.PutUint64(buf[:uint64Size], h.MessageNumber)
+	binary.LittleEndian.PutUint64(buf[uint64Size:2*uint64Size], h.PreviousSendingChainMessagesCount)
+	copy(buf[2*uint64Size:], h.PublicKey.Bytes)
 
 	return buf, nil
-}
-
-func (h *Header) MessageNumber() uint64 {
-	return h.messageNumber
 }

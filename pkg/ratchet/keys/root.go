@@ -1,15 +1,11 @@
 package keys
 
 type Root struct {
-	bytes []byte
+	Bytes []byte
 }
 
 func NewRoot(bytes []byte) *Root {
-	return &Root{bytes: bytes}
-}
-
-func (rk *Root) Bytes() []byte {
-	return rk.bytes
+	return &Root{Bytes: bytes}
 }
 
 func (rk *Root) Clone() *Root {
@@ -17,5 +13,5 @@ func (rk *Root) Clone() *Root {
 		return nil
 	}
 
-	return NewRoot(cloneBytes(rk.bytes))
+	return NewRoot(cloneBytes(rk.Bytes))
 }

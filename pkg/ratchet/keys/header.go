@@ -1,15 +1,11 @@
 package keys
 
 type Header struct {
-	bytes []byte
+	Bytes []byte
 }
 
 func NewHeader(bytes []byte) *Header {
-	return &Header{bytes: bytes}
-}
-
-func (hk *Header) Bytes() []byte {
-	return hk.bytes
+	return &Header{Bytes: bytes}
 }
 
 func (hk *Header) Clone() *Header {
@@ -17,5 +13,5 @@ func (hk *Header) Clone() *Header {
 		return nil
 	}
 
-	return NewHeader(cloneBytes(hk.bytes))
+	return NewHeader(cloneBytes(hk.Bytes))
 }
