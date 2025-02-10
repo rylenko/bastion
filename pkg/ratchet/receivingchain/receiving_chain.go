@@ -31,10 +31,6 @@ func New(
 	}
 }
 
-func NewEmpty(nextHeaderKey *keys.Header, config *Config) *ReceivingChain {
-	return New(nil, nil, nextHeaderKey, 0, config)
-}
-
 func (rc *ReceivingChain) Advance() (*keys.Message, error) {
 	if rc.config == nil {
 		return nil, fmt.Errorf("%w: config is nil", errors.ErrInvalidValue)

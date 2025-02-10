@@ -40,8 +40,8 @@ func NewRecipient(
 		localPublicKey,
 		nil,
 		rootchain.New(rootKey, config.rootChainConfig),
-		sendingchain.NewEmpty(nil, nil, sendingChainNextHeaderKey, config.sendingChainConfig),
-		receivingchain.NewEmpty(receivingChainNextHeaderKey, config.receivingChainConfig),
+		sendingchain.New(nil, nil, sendingChainNextHeaderKey, 0, 0, config.sendingChainConfig),
+		receivingchain.New(nil, nil, receivingChainNextHeaderKey, 0, config.receivingChainConfig),
 		config,
 	)
 }
@@ -82,8 +82,8 @@ func NewSender(
 		localPublicKey,
 		remotePublicKey,
 		rootChain,
-		sendingchain.NewEmpty(sendingChainKey, sendingChainHeaderKey, sendingChainNextHeaderKey, config.sendingChainConfig),
-		receivingchain.NewEmpty(receivingChainNextHeaderKey, config.receivingChainConfig),
+		sendingchain.New(sendingChainKey, sendingChainHeaderKey, sendingChainNextHeaderKey, 0, 0, config.sendingChainConfig),
+		receivingchain.New(nil, nil, receivingChainNextHeaderKey, 0, config.receivingChainConfig),
 		config,
 	)
 

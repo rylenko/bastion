@@ -34,10 +34,6 @@ func New(
 	}
 }
 
-func NewEmpty(masterKey *keys.MessageMaster, headerKey, nextHeaderKey *keys.Header, config *Config) *SendingChain {
-	return New(masterKey, headerKey, nextHeaderKey, 0, 0, config)
-}
-
 func (sc *SendingChain) Advance() (*keys.Message, error) {
 	if sc.config == nil {
 		return nil, fmt.Errorf("%w: config is nil", errors.ErrInvalidValue)
