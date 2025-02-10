@@ -42,7 +42,7 @@ func newCrypto() Crypto {
 	return &crypto{curve: ecdh.X25519()}
 }
 
-func (c *crypto) ComputeSharedSecretKey(privateKey *keys.Private, publicKey *keys.Public) (*keys.SharedSecret, error) {
+func (c crypto) ComputeSharedSecretKey(privateKey *keys.Private, publicKey *keys.Public) (*keys.SharedSecret, error) {
 	if privateKey == nil {
 		return nil, fmt.Errorf("%w: private key is nil", errors.ErrInvalidValue)
 	}
@@ -71,7 +71,7 @@ func (c *crypto) ComputeSharedSecretKey(privateKey *keys.Private, publicKey *key
 	return sharedSecretKey, nil
 }
 
-func (c *crypto) Encrypt(key *keys.Message, data, auth []byte) ([]byte, error) {
+func (c crypto) Encrypt(key *keys.Message, data, auth []byte) ([]byte, error) {
 	hasher, err := blake2b.New512(nil)
 	if err != nil {
 		return nil, fmt.Errorf("new hash: %w", err)
@@ -97,7 +97,7 @@ func (c *crypto) Encrypt(key *keys.Message, data, auth []byte) ([]byte, error) {
 	return encryptedData, nil
 }
 
-func (c *crypto) EncryptHeader(key *keys.Header, header *header.Header) ([]byte, error) {
+func (c crypto) EncryptHeader(key *keys.Header, header *header.Header) ([]byte, error) {
 	hasher, err := blake2b.New512(nil)
 	if err != nil {
 		return nil, fmt.Errorf("new hash: %w", err)
@@ -144,7 +144,7 @@ func (c *crypto) EncryptHeader(key *keys.Header, header *header.Header) ([]byte,
 	return encryptedData, nil
 }
 
-func (c *crypto) GenerateKeyPair() (*keys.Private, *keys.Public, error) {
+func (c crypto) GenerateKeyPair() (*keys.Private, *keys.Public, error) {
 	foreignPrivateKey, err := c.curve.GenerateKey(rand.Reader)
 	if err != nil {
 		return nil, nil, err
