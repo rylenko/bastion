@@ -5,16 +5,17 @@ import (
 	"log"
 
 	"github.com/rylenko/bastion/pkg/ratchet"
+	"github.com/rylenko/bastion/pkg/ratchet/keys"
 )
 
 func main() {
 	sender, err := ratchet.NewSender(
-		nil,
-		nil,
-		nil,
-		nil,
+		keys.Public{},
+		keys.Root{},
+		keys.Header{},
+		keys.Header{},
 		ratchet.WithMessageKeysSkipLimit(0),
-		ratchet.WithSkippedMessageKeysStorage(struct{}{}),
+		ratchet.WithSkippedMessageKeysStorage((*int)(nil)),
 	)
 	if err != nil {
 		log.Fatal("new ratchet sender: ", err)

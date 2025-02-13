@@ -1,48 +1,39 @@
 package receivingchain
 
-import "github.com/rylenko/bastion/pkg/ratchet/messagechaincommon"
+import (
+	"fmt"
+
+	"github.com/rylenko/bastion/pkg/ratchet/errors"
+	"github.com/rylenko/bastion/pkg/ratchet/messagechaincommon"
+)
 
 const messageKeysSkipLimit = 1024
 
-type Config struct {
+type config struct {
 	crypto                    Crypto
 	messageKeysSkipLimit      uint64
 	skippedMessageKeysStorage SkippedMessageKeysStorage
 }
 
-func NewConfig(options ...ConfigOption) *Config {
-	cfg := &Config{
+func newConfig(options []Option) (config, error) {
+	cfg := config{
 		crypto:                    messagechaincommon.NewCrypto(),
 		messageKeysSkipLimit:      messageKeysSkipLimit,
 		skippedMessageKeysStorage: newSkippedMessageKeysStorage(),
 	}
-	cfg.ApplyOptions(options...)
+	if err := cfg.applyOptions(options); err != nil {
+		return config{}, fmt.Errorf("%w: %w", errors.ErrOption, err)
+	}
 
-	return cfg
+	return cfg, nil
 }
 
-func (cfg *Config) ApplyOptions(options ...ConfigOption) {
+func (cfg *config) applyOptions(options []Option) error {
 	for _, option := range options {
-		option(cfg)
+		if err := option(cfg); err != nil {
+			return err
+		}
 	}
-}
 
-type ConfigOption func(cfg *Config)
-
-func WithCrypto(crypto Crypto) ConfigOption {
-	return func(c *Config) {
-		c.crypto = crypto
-	}
-}
-
-func WithMessageKeysSkipLimit(limit uint64) ConfigOption {
-	return func(cfg *Config) {
-		cfg.messageKeysSkipLimit = limit
-	}
-}
-
-func WithSkippedMessageKeysStorage(storage SkippedMessageKeysStorage) ConfigOption {
-	return func(cfg *Config) {
-		cfg.skippedMessageKeysStorage = storage
-	}
+	return nil
 }

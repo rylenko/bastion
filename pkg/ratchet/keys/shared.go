@@ -1,5 +1,5 @@
 package keys
 
-type Message struct {
+type Shared struct {
 	Bytes []byte
 }

@@ -3,52 +3,40 @@ package header
 import (
 	"encoding/binary"
 	"fmt"
-	"unsafe"
 
 	"github.com/rylenko/bastion/pkg/ratchet/errors"
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
+	"github.com/rylenko/bastion/pkg/ratchet/utils"
 )
 
-var uint64Size = int(unsafe.Sizeof(uint64(0)))
-
 type Header struct {
-	PublicKey                         *keys.Public
+	PublicKey                         keys.Public
 	PreviousSendingChainMessagesCount uint64
 	MessageNumber                     uint64
 }
 
-func Decode(bytes []byte) (*Header, error) {
-	if len(bytes) <= 2*uint64Size {
-		return nil, fmt.Errorf("%w: not enough bytes", errors.ErrInvalidValue)
+func Decode(bytes []byte) (Header, error) {
+	if len(bytes) < 2*utils.Uint64Size {
+		return Header{}, fmt.Errorf("%w: not enough bytes", errors.ErrInvalidValue)
 	}
 
-	messageNumber := binary.LittleEndian.Uint64(bytes[:uint64Size])
-	previousMessagesCount := binary.LittleEndian.Uint64(bytes[uint64Size : 2*uint64Size])
+	header := Header{
+		MessageNumber:                     binary.LittleEndian.Uint64(bytes[:utils.Uint64Size]),
+		PreviousSendingChainMessagesCount: binary.LittleEndian.Uint64(bytes[utils.Uint64Size : 2*utils.Uint64Size]),
+	}
 
-	key := keys.NewPublic(make([]byte, len(bytes)-2*uint64Size))
-	copy(key.Bytes, bytes[2*uint64Size:])
+	if len(bytes) > 2*utils.Uint64Size {
+		header.PublicKey = keys.Public{Bytes: bytes[2*utils.Uint64Size:]}
+	}
 
-	return New(key, previousMessagesCount, messageNumber), nil
+	return header, nil
 }
 
-func New(publicKey *keys.Public, previousSendingChainMessagesCount, messageNumber uint64) *Header {
-	return &Header{
-		PublicKey:                         publicKey,
-		PreviousSendingChainMessagesCount: previousSendingChainMessagesCount,
-		MessageNumber:                     messageNumber,
-	}
-}
+func (h Header) Encode() []byte {
+	var messageNumberBytes, previousMessagesCountBytes [utils.Uint64Size]byte
 
-func (h *Header) Encode() ([]byte, error) {
-	if h.PublicKey == nil {
-		return nil, fmt.Errorf("%w: public key is nil", errors.ErrInvalidValue)
-	}
+	binary.LittleEndian.PutUint64(messageNumberBytes[:], h.MessageNumber)
+	binary.LittleEndian.PutUint64(previousMessagesCountBytes[:], h.PreviousSendingChainMessagesCount)
 
-	buf := make([]byte, 2*uint64Size+len(h.PublicKey.Bytes))
-
-	binary.LittleEndian.PutUint64(buf[:uint64Size], h.MessageNumber)
-	binary.LittleEndian.PutUint64(buf[uint64Size:2*uint64Size], h.PreviousSendingChainMessagesCount)
-	copy(buf[2*uint64Size:], h.PublicKey.Bytes)
-
-	return buf, nil
+	return utils.ConcatByteSlices(messageNumberBytes[:], previousMessagesCountBytes[:], h.PublicKey.Bytes)
 }

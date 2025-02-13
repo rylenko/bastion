@@ -1,17 +1,19 @@
 package keys
 
+import "github.com/rylenko/bastion/pkg/ratchet/utils"
+
 type Public struct {
 	Bytes []byte
 }
 
-func NewPublic(bytes []byte) *Public {
-	return &Public{Bytes: bytes}
+func (pk Public) Clone() Public {
+	return Public{Bytes: utils.CloneByteSlice(pk.Bytes)}
 }
 
-func (pk *Public) Clone() *Public {
+func (pk *Public) ClonePtr() *Public {
 	if pk == nil {
 		return nil
 	}
 
-	return NewPublic(cloneBytes(pk.Bytes))
+	return &Public{Bytes: utils.CloneByteSlice(pk.Bytes)}
 }

@@ -1,17 +1,11 @@
 package keys
 
+import "github.com/rylenko/bastion/pkg/ratchet/utils"
+
 type Root struct {
 	Bytes []byte
 }
 
-func NewRoot(bytes []byte) *Root {
-	return &Root{Bytes: bytes}
-}
-
-func (rk *Root) Clone() *Root {
-	if rk == nil {
-		return nil
-	}
-
-	return NewRoot(cloneBytes(rk.Bytes))
+func (rk Root) Clone() Root {
+	return Root{Bytes: utils.CloneByteSlice(rk.Bytes)}
 }

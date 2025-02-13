@@ -1,17 +1,19 @@
 package keys
 
+import "github.com/rylenko/bastion/pkg/ratchet/utils"
+
 type Header struct {
 	Bytes []byte
 }
 
-func NewHeader(bytes []byte) *Header {
-	return &Header{Bytes: bytes}
+func (hk Header) Clone() Header {
+	return Header{Bytes: utils.CloneByteSlice(hk.Bytes)}
 }
 
-func (hk *Header) Clone() *Header {
+func (hk *Header) ClonePtr() *Header {
 	if hk == nil {
 		return nil
 	}
 
-	return NewHeader(cloneBytes(hk.Bytes))
+	return &Header{Bytes: utils.CloneByteSlice(hk.Bytes)}
 }

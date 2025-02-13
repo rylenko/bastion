@@ -1,28 +1,31 @@
 package sendingchain
 
-import "github.com/rylenko/bastion/pkg/ratchet/messagechaincommon"
+import (
+	"fmt"
 
-type Config struct {
+	"github.com/rylenko/bastion/pkg/ratchet/errors"
+	"github.com/rylenko/bastion/pkg/ratchet/messagechaincommon"
+)
+
+type config struct {
 	crypto Crypto
 }
 
-func NewConfig(options ...ConfigOption) *Config {
-	cfg := &Config{crypto: messagechaincommon.NewCrypto()}
-	cfg.ApplyOptions(options...)
+func newConfig(options []Option) (config, error) {
+	cfg := config{crypto: messagechaincommon.NewCrypto()}
+	if err := cfg.applyOptions(options); err != nil {
+		return config{}, fmt.Errorf("%w: %w", errors.ErrOption, err)
+	}
 
-	return cfg
+	return cfg, nil
 }
 
-func (cfg *Config) ApplyOptions(options ...ConfigOption) {
+func (cfg *config) applyOptions(options []Option) error {
 	for _, option := range options {
-		option(cfg)
+		if err := option(cfg); err != nil {
+			return err
+		}
 	}
-}
 
-type ConfigOption func(cfg *Config)
-
-func WithCrypto(crypto Crypto) ConfigOption {
-	return func(cfg *Config) {
-		cfg.crypto = crypto
-	}
+	return nil
 }
