@@ -123,16 +123,15 @@ func NewSender(
 	return ratchet, nil
 }
 
-func (r *Ratchet) Clone() Ratchet {
-	return Ratchet{
-		localPrivateKey: r.localPrivateKey.Clone(),
-		localPublicKey:  r.localPublicKey.Clone(),
-		remotePublicKey: r.remotePublicKey.ClonePtr(),
-		rootChain:       r.rootChain.Clone(),
-		sendingChain:    r.sendingChain.Clone(),
-		receivingChain:  r.receivingChain.Clone(),
-		cfg:             r.cfg,
-	}
+func (r Ratchet) Clone() Ratchet {
+	r.localPrivateKey = r.localPrivateKey.Clone()
+	r.localPublicKey = r.localPublicKey.Clone()
+	r.remotePublicKey = r.remotePublicKey.ClonePtr()
+	r.rootChain = r.rootChain.Clone()
+	r.sendingChain = r.sendingChain.Clone()
+	r.receivingChain = r.receivingChain.Clone()
+
+	return r
 }
 
 func (r *Ratchet) Encrypt(data, auth []byte) ([]byte, []byte, error) {
