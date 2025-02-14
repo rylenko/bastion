@@ -55,13 +55,12 @@ func (ch *Chain) Advance() (keys.Message, error) {
 }
 
 func (ch Chain) Clone() Chain {
-	return Chain{
-		masterKey:         ch.masterKey.ClonePtr(),
-		headerKey:         ch.headerKey.ClonePtr(),
-		nextHeaderKey:     ch.nextHeaderKey.Clone(),
-		nextMessageNumber: ch.nextMessageNumber,
-		cfg:               ch.cfg.clone(),
-	}
+	ch.masterKey = ch.masterKey.ClonePtr()
+	ch.headerKey = ch.headerKey.ClonePtr()
+	ch.nextHeaderKey = ch.nextHeaderKey.Clone()
+	ch.cfg = ch.cfg.clone()
+
+	return ch
 }
 
 func (ch *Chain) Upgrade(masterKey keys.MessageMaster, nextHeaderKey keys.Header) {

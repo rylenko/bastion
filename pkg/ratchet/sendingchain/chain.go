@@ -57,15 +57,12 @@ func (ch *Chain) Advance() (keys.Message, error) {
 	return messageKey, nil
 }
 
-func (ch *Chain) Clone() Chain {
-	return Chain{
-		masterKey:                  ch.masterKey.ClonePtr(),
-		headerKey:                  ch.headerKey.ClonePtr(),
-		nextHeaderKey:              ch.nextHeaderKey.Clone(),
-		nextMessageNumber:          ch.nextMessageNumber,
-		previousChainMessagesCount: ch.previousChainMessagesCount,
-		cfg:                        ch.cfg,
-	}
+func (ch Chain) Clone() Chain {
+	ch.masterKey = ch.masterKey.ClonePtr()
+	ch.headerKey = ch.headerKey.ClonePtr()
+	ch.nextHeaderKey = ch.nextHeaderKey.Clone()
+
+	return ch
 }
 
 func (ch *Chain) HeaderKey() *keys.Header {

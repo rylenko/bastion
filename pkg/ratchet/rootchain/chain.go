@@ -33,5 +33,6 @@ func (ch *Chain) Advance(sharedKey keys.Shared) (keys.MessageMaster, keys.Header
 }
 
 func (ch Chain) Clone() Chain {
-	return Chain{key: ch.key.Clone(), cfg: ch.cfg}
+	ch.key = ch.key.Clone()
+	return ch
 }

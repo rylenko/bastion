@@ -57,7 +57,6 @@ func NewRecipient(
 	ratchet := Ratchet{
 		localPrivateKey: localPrivateKey,
 		localPublicKey:  localPublicKey,
-		remotePublicKey: nil,
 		rootChain:       rootChain,
 		sendingChain:    sendingChain,
 		receivingChain:  receivingChain,
