@@ -7,7 +7,8 @@ type Public struct {
 }
 
 func (pk Public) Clone() Public {
-	return Public{Bytes: utils.CloneByteSlice(pk.Bytes)}
+	pk.Bytes = utils.CloneByteSlice(pk.Bytes)
+	return pk
 }
 
 func (pk *Public) ClonePtr() *Public {

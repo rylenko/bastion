@@ -7,7 +7,8 @@ type Header struct {
 }
 
 func (hk Header) Clone() Header {
-	return Header{Bytes: utils.CloneByteSlice(hk.Bytes)}
+	hk.Bytes = utils.CloneByteSlice(hk.Bytes)
+	return hk
 }
 
 func (hk *Header) ClonePtr() *Header {

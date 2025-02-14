@@ -7,5 +7,6 @@ type Private struct {
 }
 
 func (pk Private) Clone() Private {
-	return Private{Bytes: utils.CloneByteSlice(pk.Bytes)}
+	pk.Bytes = utils.CloneByteSlice(pk.Bytes)
+	return pk
 }

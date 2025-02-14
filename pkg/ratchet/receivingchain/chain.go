@@ -60,7 +60,7 @@ func (ch Chain) Clone() Chain {
 		headerKey:         ch.headerKey.ClonePtr(),
 		nextHeaderKey:     ch.nextHeaderKey.Clone(),
 		nextMessageNumber: ch.nextMessageNumber,
-		cfg:               ch.cfg,
+		cfg:               ch.cfg.clone(),
 	}
 }
 

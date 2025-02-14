@@ -20,10 +20,9 @@ func Decode(bytes []byte) (Header, error) {
 		return Header{}, fmt.Errorf("%w: not enough bytes", errors.ErrInvalidValue)
 	}
 
-	header := Header{
-		MessageNumber:                     binary.LittleEndian.Uint64(bytes[:utils.Uint64Size]),
-		PreviousSendingChainMessagesCount: binary.LittleEndian.Uint64(bytes[utils.Uint64Size : 2*utils.Uint64Size]),
-	}
+	header := Header{}
+	header.MessageNumber = binary.LittleEndian.Uint64(bytes[:utils.Uint64Size])
+	header.PreviousSendingChainMessagesCount = binary.LittleEndian.Uint64(bytes[utils.Uint64Size : 2*utils.Uint64Size])
 
 	if len(bytes) > 2*utils.Uint64Size {
 		header.PublicKey = keys.Public{Bytes: bytes[2*utils.Uint64Size:]}

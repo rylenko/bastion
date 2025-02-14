@@ -37,3 +37,8 @@ func (cfg *config) applyOptions(options []Option) error {
 
 	return nil
 }
+
+func (cfg config) clone() config {
+	cfg.skippedMessageKeysStorage = cfg.skippedMessageKeysStorage.Clone()
+	return cfg
+}

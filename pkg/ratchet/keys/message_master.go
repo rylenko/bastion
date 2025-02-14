@@ -7,5 +7,9 @@ type MessageMaster struct {
 }
 
 func (mk *MessageMaster) ClonePtr() *MessageMaster {
+	if mk == nil {
+		return nil
+	}
+
 	return &MessageMaster{Bytes: utils.CloneByteSlice(mk.Bytes)}
 }

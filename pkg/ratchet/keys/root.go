@@ -7,5 +7,6 @@ type Root struct {
 }
 
 func (rk Root) Clone() Root {
-	return Root{Bytes: utils.CloneByteSlice(rk.Bytes)}
+	rk.Bytes = utils.CloneByteSlice(rk.Bytes)
+	return rk
 }
