@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/rylenko/bastion/pkg/ratchet/errors"
+	"github.com/rylenko/bastion/pkg/ratchet/header"
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
 )
 
@@ -65,16 +66,25 @@ func (ch Chain) Clone() Chain {
 	return ch
 }
 
-func (ch *Chain) HeaderKey() *keys.Header {
-	return ch.headerKey
+func (ch *Chain) EncryptHeader(header header.Header) ([]byte, error) {
+	if ch.headerKey == nil {
+		return nil, fmt.Errorf("%w: header key is nil", errors.ErrInvalidValue)
+	}
+
+	encryptedHeader, err := ch.cfg.crypto.EncryptHeader(*ch.headerKey, header)
+	if err != nil {
+		return nil, fmt.Errorf("%w: encrypt header: %w", errors.ErrCrypto, err)
+	}
+
+	return encryptedHeader, nil
 }
 
-func (ch *Chain) NextMessageNumber() uint64 {
-	return ch.nextMessageNumber
-}
-
-func (ch *Chain) PreviousChainMessagesCount() uint64 {
-	return ch.previousChainMessagesCount
+func (ch *Chain) PrepareHeader(publicKey keys.Public) header.Header {
+	return header.Header{
+		PublicKey:                         publicKey,
+		MessageNumber:                     ch.nextMessageNumber,
+		PreviousSendingChainMessagesCount: ch.previousChainMessagesCount,
+	}
 }
 
 func (ch *Chain) Upgrade(masterKey keys.MessageMaster, nextHeaderKey keys.Header) {

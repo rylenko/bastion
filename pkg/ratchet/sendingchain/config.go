@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/rylenko/bastion/pkg/ratchet/errors"
-	"github.com/rylenko/bastion/pkg/ratchet/messagechaincommon"
 )
 
 type config struct {
@@ -12,7 +11,7 @@ type config struct {
 }
 
 func newConfig(options []Option) (config, error) {
-	cfg := config{crypto: messagechaincommon.NewCrypto()}
+	cfg := config{crypto: newCrypto()}
 	if err := cfg.applyOptions(options); err != nil {
 		return config{}, fmt.Errorf("%w: %w", errors.ErrOption, err)
 	}

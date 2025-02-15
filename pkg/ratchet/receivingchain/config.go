@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/rylenko/bastion/pkg/ratchet/errors"
-	"github.com/rylenko/bastion/pkg/ratchet/messagechaincommon"
 )
 
 const messageKeysSkipLimit = 1024
@@ -17,7 +16,7 @@ type config struct {
 
 func newConfig(options []Option) (config, error) {
 	cfg := config{
-		crypto:                    messagechaincommon.NewCrypto(),
+		crypto:                    newCrypto(),
 		messageKeysSkipLimit:      messageKeysSkipLimit,
 		skippedMessageKeysStorage: newSkippedMessageKeysStorage(),
 	}

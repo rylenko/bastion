@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/rylenko/bastion/pkg/ratchet/errors"
-	"github.com/rylenko/bastion/pkg/ratchet/header"
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
 	"github.com/rylenko/bastion/pkg/ratchet/receivingchain"
 	"github.com/rylenko/bastion/pkg/ratchet/rootchain"
@@ -134,47 +133,61 @@ func (r Ratchet) Clone() Ratchet {
 	return r
 }
 
+func (r *Ratchet) Decrypt(encryptedHeader, encryptedData, auth []byte) ([]byte, error) {
+	var data []byte
+
+	err := r.updateWithTx(func(r *Ratchet) error {
+		if _, err := r.receivingChain.HandleEncryptedHeader(encryptedHeader, r.ratchet); err != nil {
+			return fmt.Errorf("handle encrypted header: %w", err)
+		}
+
+		messageKey, err := r.receivingChain.Advance()
+		if err != nil {
+			return fmt.Errorf("advance receiving chain: %w", err)
+		}
+
+		data, err = r.cfg.crypto.Decrypt(messageKey, encryptedData, utils.ConcatByteSlices(auth, encryptedHeader))
+		if err != nil {
+			return fmt.Errorf("%w: decrypt data: %w", errors.ErrCrypto, err)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
 func (r *Ratchet) Encrypt(data, auth []byte) ([]byte, []byte, error) {
 	var encryptedHeader, encryptedData []byte
 
-	tx := func(newR *Ratchet) error {
-		header := header.Header{
-			PublicKey:                         newR.localPublicKey,
-			PreviousSendingChainMessagesCount: newR.sendingChain.PreviousChainMessagesCount(),
-			MessageNumber:                     newR.sendingChain.NextMessageNumber(),
-		}
-
-		headerKey := newR.sendingChain.HeaderKey()
-		if headerKey == nil {
-			return fmt.Errorf("%w: sending chain header key is nil", errors.ErrInvalidValue)
-		}
-
-		encryptedHeader, err := newR.cfg.crypto.EncryptHeader(*headerKey, header)
+	err := r.updateWithTx(func(r *Ratchet) error {
+		encryptedHeader, err := r.sendingChain.EncryptHeader(r.sendingChain.PrepareHeader(r.localPublicKey))
 		if err != nil {
-			return fmt.Errorf("%w: encrypt header: %w", errors.ErrCrypto, err)
+			return fmt.Errorf("encrypt header: %w", err)
 		}
 
-		messageKey, err := newR.sendingChain.Advance()
+		messageKey, err := r.sendingChain.Advance()
 		if err != nil {
 			return fmt.Errorf("advance sending chain: %w", err)
 		}
 
-		encryptedData, err = newR.cfg.crypto.Encrypt(messageKey, data, utils.ConcatByteSlices(encryptedHeader, auth))
+		encryptedData, err = r.cfg.crypto.Encrypt(messageKey, data, utils.ConcatByteSlices(encryptedHeader, auth))
 		if err != nil {
 			return fmt.Errorf("%w: encrypt data: %w", errors.ErrCrypto, err)
 		}
 
 		return nil
-	}
-
-	if err := r.updateWithTx(tx); err != nil {
+	})
+	if err != nil {
 		return nil, nil, err
 	}
 
 	return encryptedHeader, encryptedData, nil
 }
 
-//nolint:unused // TODO: use
 func (r *Ratchet) ratchet(remotePublicKey keys.Public) error {
 	r.remotePublicKey = &remotePublicKey
 
@@ -212,12 +225,12 @@ func (r *Ratchet) ratchet(remotePublicKey keys.Public) error {
 
 // TODO: docs.
 func (r *Ratchet) updateWithTx(txFunc func(r *Ratchet) error) error {
-	newR := r.Clone()
-	if err := txFunc(&newR); err != nil {
+	rDirty := r.Clone()
+	if err := txFunc(&rDirty); err != nil {
 		return err
 	}
 
-	*r = newR
+	*r = rDirty
 
 	return nil
 }
