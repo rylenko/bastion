@@ -16,6 +16,7 @@ import (
 type Crypto interface {
 	AdvanceChain(masterKey keys.MessageMaster) (keys.MessageMaster, keys.Message, error)
 	EncryptHeader(key keys.Header, header header.Header) ([]byte, error)
+	EncryptMessage(key keys.Message, data, auth []byte) ([]byte, error)
 }
 
 type crypto struct{}
@@ -50,16 +51,29 @@ func (c crypto) AdvanceChain(masterKey keys.MessageMaster) (keys.MessageMaster, 
 	return newMasterKey, messageKey, nil
 }
 
-func (c crypto) EncryptHeader(headerKey keys.Header, header header.Header) ([]byte, error) {
-	key, nonce, err := messagechainscommon.DeriveHeaderCipherKeyAndNonce(headerKey, header.MessageNumber)
+func (c crypto) EncryptHeader(key keys.Header, header header.Header) ([]byte, error) {
+	cipherKey, nonce, err := messagechainscommon.DeriveHeaderCipherKeyAndNonce(key, header.MessageNumber)
 	if err != nil {
 		return nil, fmt.Errorf("derive key and nonce: %w", err)
 	}
 
+	return c.encrypt(cipherKey, nonce, header.Encode(), nil)
+}
+
+func (c crypto) EncryptMessage(key keys.Message, data, auth []byte) ([]byte, error) {
+	cipherKey, nonce, err := messagechainscommon.DeriveMessageCipherKeyAndNonce(key)
+	if err != nil {
+		return nil, fmt.Errorf("derive key and nonce: %w", err)
+	}
+
+	return c.encrypt(cipherKey, nonce, data, auth)
+}
+
+func (c crypto) encrypt(key, nonce, data, auth []byte) ([]byte, error) {
 	cipher, err := cipher.NewX(key)
 	if err != nil {
 		return nil, fmt.Errorf("new cipher: %w", err)
 	}
 
-	return cipher.Seal(nil, nonce, header.Encode(), nil), nil
+	return cipher.Seal(nil, nonce, data, auth), nil
 }

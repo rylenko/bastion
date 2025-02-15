@@ -6,6 +6,7 @@ import (
 	"github.com/rylenko/bastion/pkg/ratchet/errors"
 	"github.com/rylenko/bastion/pkg/ratchet/header"
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
+	"github.com/rylenko/bastion/pkg/ratchet/utils"
 )
 
 type Chain struct {
@@ -42,22 +43,6 @@ func New(
 	return chain, nil
 }
 
-func (ch *Chain) Advance() (keys.Message, error) {
-	if ch.masterKey == nil {
-		return keys.Message{}, fmt.Errorf("%w: master key is nil", errors.ErrInvalidValue)
-	}
-
-	newMasterKey, messageKey, err := ch.cfg.crypto.AdvanceChain(*ch.masterKey)
-	if err != nil {
-		return keys.Message{}, fmt.Errorf("%w: advance via crypto: %w", errors.ErrCrypto, err)
-	}
-
-	ch.masterKey = &newMasterKey
-	ch.nextMessageNumber++
-
-	return messageKey, nil
-}
-
 func (ch Chain) Clone() Chain {
 	ch.masterKey = ch.masterKey.ClonePtr()
 	ch.headerKey = ch.headerKey.ClonePtr()
@@ -66,17 +51,38 @@ func (ch Chain) Clone() Chain {
 	return ch
 }
 
-func (ch *Chain) EncryptHeader(header header.Header) ([]byte, error) {
-	if ch.headerKey == nil {
-		return nil, fmt.Errorf("%w: header key is nil", errors.ErrInvalidValue)
-	}
+func (ch *Chain) Encrypt(header header.Header, data, auth []byte) ([]byte, []byte, error) {
+	var encryptedHeader, encryptedData []byte
 
-	encryptedHeader, err := ch.cfg.crypto.EncryptHeader(*ch.headerKey, header)
+	err := utils.UpdateWithTx(ch, ch.Clone(), func(ch *Chain) error {
+		if ch.headerKey == nil {
+			return fmt.Errorf("%w: header key is nil", errors.ErrInvalidValue)
+		}
+
+		encryptedHeader, err := ch.cfg.crypto.EncryptHeader(*ch.headerKey, header)
+		if err != nil {
+			return fmt.Errorf("%w: encrypt header: %w", errors.ErrCrypto, err)
+		}
+
+		messageKey, err := ch.advance()
+		if err != nil {
+			return fmt.Errorf("advance chain: %w", err)
+		}
+
+		auth = utils.ConcatByteSlices(encryptedHeader, auth)
+
+		encryptedData, err = ch.cfg.crypto.EncryptMessage(messageKey, data, auth)
+		if err != nil {
+			return fmt.Errorf("%w: encrypt message: %w", errors.ErrCrypto, err)
+		}
+
+		return nil
+	})
 	if err != nil {
-		return nil, fmt.Errorf("%w: encrypt header: %w", errors.ErrCrypto, err)
+		return nil, nil, err
 	}
 
-	return encryptedHeader, nil
+	return encryptedHeader, encryptedData, nil
 }
 
 func (ch *Chain) PrepareHeader(publicKey keys.Public) header.Header {
@@ -93,4 +99,20 @@ func (ch *Chain) Upgrade(masterKey keys.MessageMaster, nextHeaderKey keys.Header
 	ch.nextHeaderKey = nextHeaderKey
 	ch.previousChainMessagesCount = ch.nextMessageNumber
 	ch.nextMessageNumber = 0
+}
+
+func (ch *Chain) advance() (keys.Message, error) {
+	if ch.masterKey == nil {
+		return keys.Message{}, fmt.Errorf("%w: master key is nil", errors.ErrInvalidValue)
+	}
+
+	newMasterKey, messageKey, err := ch.cfg.crypto.AdvanceChain(*ch.masterKey)
+	if err != nil {
+		return keys.Message{}, fmt.Errorf("%w: advance via crypto: %w", errors.ErrCrypto, err)
+	}
+
+	ch.masterKey = &newMasterKey
+	ch.nextMessageNumber++
+
+	return messageKey, nil
 }

@@ -16,6 +16,7 @@ import (
 type Crypto interface {
 	AdvanceChain(masterKey keys.MessageMaster) (keys.MessageMaster, keys.Message, error)
 	DecryptHeader(key keys.Header, encryptedHeader []byte, messageNumber uint64) (header.Header, error)
+	DecryptMessage(key keys.Message, encryptedData, auth []byte) ([]byte, error)
 }
 
 type crypto struct{}
@@ -50,24 +51,15 @@ func (c crypto) AdvanceChain(masterKey keys.MessageMaster) (keys.MessageMaster, 
 	return newMasterKey, messageKey, nil
 }
 
-func (c crypto) DecryptHeader(
-	headerKey keys.Header,
-	encryptedHeader []byte,
-	messageNumber uint64,
-) (header.Header, error) {
-	key, nonce, err := messagechainscommon.DeriveHeaderCipherKeyAndNonce(headerKey, messageNumber)
+func (c crypto) DecryptHeader(key keys.Header, encryptedHeader []byte, messageNumber uint64) (header.Header, error) {
+	cipherKey, nonce, err := messagechainscommon.DeriveHeaderCipherKeyAndNonce(key, messageNumber)
 	if err != nil {
 		return header.Header{}, fmt.Errorf("derive key and nonce: %w", err)
 	}
 
-	cipher, err := cipher.NewX(key)
+	headerBytes, err := c.decrypt(cipherKey, nonce, encryptedHeader, nil)
 	if err != nil {
-		return header.Header{}, fmt.Errorf("new cipher: %w", err)
-	}
-
-	headerBytes, err := cipher.Open(nil, nonce, encryptedHeader, nil)
-	if err != nil {
-		return header.Header{}, fmt.Errorf("decrypt: %w", err)
+		return header.Header{}, err
 	}
 
 	decryptedHeader, err := header.Decode(headerBytes)
@@ -76,4 +68,27 @@ func (c crypto) DecryptHeader(
 	}
 
 	return decryptedHeader, nil
+}
+
+func (c crypto) DecryptMessage(key keys.Message, encryptedData, auth []byte) ([]byte, error) {
+	cipherKey, nonce, err := messagechainscommon.DeriveMessageCipherKeyAndNonce(key)
+	if err != nil {
+		return nil, fmt.Errorf("derive key and nonce: %w", err)
+	}
+
+	return c.decrypt(cipherKey, nonce, encryptedData, auth)
+}
+
+func (c crypto) decrypt(key, nonce, encryptedData, auth []byte) ([]byte, error) {
+	cipher, err := cipher.NewX(key)
+	if err != nil {
+		return nil, fmt.Errorf("new cipher: %w", err)
+	}
+
+	data, err := cipher.Open(nil, nonce, encryptedData, auth)
+	if err != nil {
+		return nil, fmt.Errorf("decrypt: %w", err)
+	}
+
+	return data, nil
 }

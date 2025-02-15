@@ -136,22 +136,11 @@ func (r Ratchet) Clone() Ratchet {
 func (r *Ratchet) Decrypt(encryptedHeader, encryptedData, auth []byte) ([]byte, error) {
 	var data []byte
 
-	err := r.updateWithTx(func(r *Ratchet) error {
-		if _, err := r.receivingChain.HandleEncryptedHeader(encryptedHeader, r.ratchet); err != nil {
-			return fmt.Errorf("handle encrypted header: %w", err)
-		}
+	err := utils.UpdateWithTx(r, r.Clone(), func(r *Ratchet) error {
+		var err error
+		_, data, err = r.receivingChain.Decrypt(encryptedHeader, encryptedData, auth, r.ratchet)
 
-		messageKey, err := r.receivingChain.Advance()
-		if err != nil {
-			return fmt.Errorf("advance receiving chain: %w", err)
-		}
-
-		data, err = r.cfg.crypto.Decrypt(messageKey, encryptedData, utils.ConcatByteSlices(auth, encryptedHeader))
-		if err != nil {
-			return fmt.Errorf("%w: decrypt data: %w", errors.ErrCrypto, err)
-		}
-
-		return nil
+		return err
 	})
 	if err != nil {
 		return nil, err
@@ -161,31 +150,8 @@ func (r *Ratchet) Decrypt(encryptedHeader, encryptedData, auth []byte) ([]byte, 
 }
 
 func (r *Ratchet) Encrypt(data, auth []byte) ([]byte, []byte, error) {
-	var encryptedHeader, encryptedData []byte
-
-	err := r.updateWithTx(func(r *Ratchet) error {
-		encryptedHeader, err := r.sendingChain.EncryptHeader(r.sendingChain.PrepareHeader(r.localPublicKey))
-		if err != nil {
-			return fmt.Errorf("encrypt header: %w", err)
-		}
-
-		messageKey, err := r.sendingChain.Advance()
-		if err != nil {
-			return fmt.Errorf("advance sending chain: %w", err)
-		}
-
-		encryptedData, err = r.cfg.crypto.Encrypt(messageKey, data, utils.ConcatByteSlices(encryptedHeader, auth))
-		if err != nil {
-			return fmt.Errorf("%w: encrypt data: %w", errors.ErrCrypto, err)
-		}
-
-		return nil
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return encryptedHeader, encryptedData, nil
+	header := r.sendingChain.PrepareHeader(r.localPublicKey)
+	return r.sendingChain.Encrypt(header, data, auth)
 }
 
 func (r *Ratchet) ratchet(remotePublicKey keys.Public) error {
@@ -219,18 +185,6 @@ func (r *Ratchet) ratchet(remotePublicKey keys.Public) error {
 	}
 
 	r.sendingChain.Upgrade(newMasterKey, newNextHeaderKey)
-
-	return nil
-}
-
-// TODO: docs.
-func (r *Ratchet) updateWithTx(txFunc func(r *Ratchet) error) error {
-	rDirty := r.Clone()
-	if err := txFunc(&rDirty); err != nil {
-		return err
-	}
-
-	*r = rDirty
 
 	return nil
 }
