@@ -150,8 +150,21 @@ func (r *Ratchet) Decrypt(encryptedHeader, encryptedData, auth []byte) ([]byte, 
 }
 
 func (r *Ratchet) Encrypt(data, auth []byte) ([]byte, []byte, error) {
+	var encryptedHeader, encryptedData []byte
+
 	header := r.sendingChain.PrepareHeader(r.localPublicKey)
-	return r.sendingChain.Encrypt(header, data, auth)
+
+	err := utils.UpdateWithTx(r, r.Clone(), func(r *Ratchet) error {
+		var err error
+		encryptedHeader, encryptedData, err = r.sendingChain.Encrypt(header, data, auth)
+
+		return err
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return encryptedHeader, encryptedData, nil
 }
 
 func (r *Ratchet) ratchet(remotePublicKey keys.Public) error {

@@ -10,6 +10,10 @@ import (
 	"github.com/rylenko/bastion/pkg/ratchet/utils"
 )
 
+// Ratchet receiving chain.
+//
+// Please note that this structure may corrupt its state in case of errors. Therefore, clone the data at the top level
+// and replace the current data with it if there are no errors.
 type Chain struct {
 	masterKey         *keys.MessageMaster
 	headerKey         *keys.Header
@@ -56,35 +60,21 @@ func (ch *Chain) Decrypt(
 	auth []byte,
 	ratchet RatchetCallback,
 ) (header.Header, []byte, error) {
-	var (
-		decryptedHeader header.Header
-		decryptedData   []byte
-	)
-
-	err := utils.UpdateWithTx(ch, ch.Clone(), func(ch *Chain) error {
-		var err error
-
-		decryptedHeader, err = ch.handleEncryptedHeader(encryptedHeader, ratchet)
-		if err != nil {
-			return fmt.Errorf("handle encrypted header: %w", err)
-		}
-
-		messageKey, err := ch.advance()
-		if err != nil {
-			return fmt.Errorf("advance chain: %w", err)
-		}
-
-		auth = utils.ConcatByteSlices(encryptedHeader, auth)
-
-		decryptedData, err = ch.cfg.crypto.DecryptMessage(messageKey, encryptedData, auth)
-		if err != nil {
-			return fmt.Errorf("%w: decrypt message: %w", errors.ErrCrypto, err)
-		}
-
-		return nil
-	})
+	decryptedHeader, err := ch.handleEncryptedHeader(encryptedHeader, ratchet)
 	if err != nil {
-		return header.Header{}, nil, err
+		return header.Header{}, nil, fmt.Errorf("handle encrypted header: %w", err)
+	}
+
+	messageKey, err := ch.advance()
+	if err != nil {
+		return header.Header{}, nil, fmt.Errorf("advance chain: %w", err)
+	}
+
+	auth = utils.ConcatByteSlices(encryptedHeader, auth)
+
+	decryptedData, err := ch.cfg.crypto.DecryptMessage(messageKey, encryptedData, auth)
+	if err != nil {
+		return header.Header{}, nil, fmt.Errorf("%w: decrypt message: %w", errors.ErrCrypto, err)
 	}
 
 	return decryptedHeader, decryptedData, nil

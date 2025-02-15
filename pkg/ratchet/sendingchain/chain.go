@@ -9,6 +9,10 @@ import (
 	"github.com/rylenko/bastion/pkg/ratchet/utils"
 )
 
+// Ratchet sending chain.
+//
+// Please note that this structure may corrupt its state in case of errors. Therefore, clone the data at the top level
+// and replace the current data with it if there are no errors.
 type Chain struct {
 	masterKey                  *keys.MessageMaster
 	headerKey                  *keys.Header
@@ -52,34 +56,25 @@ func (ch Chain) Clone() Chain {
 }
 
 func (ch *Chain) Encrypt(header header.Header, data, auth []byte) ([]byte, []byte, error) {
-	var encryptedHeader, encryptedData []byte
+	if ch.headerKey == nil {
+		return nil, nil, fmt.Errorf("%w: header key is nil", errors.ErrInvalidValue)
+	}
 
-	err := utils.UpdateWithTx(ch, ch.Clone(), func(ch *Chain) error {
-		if ch.headerKey == nil {
-			return fmt.Errorf("%w: header key is nil", errors.ErrInvalidValue)
-		}
-
-		encryptedHeader, err := ch.cfg.crypto.EncryptHeader(*ch.headerKey, header)
-		if err != nil {
-			return fmt.Errorf("%w: encrypt header: %w", errors.ErrCrypto, err)
-		}
-
-		messageKey, err := ch.advance()
-		if err != nil {
-			return fmt.Errorf("advance chain: %w", err)
-		}
-
-		auth = utils.ConcatByteSlices(encryptedHeader, auth)
-
-		encryptedData, err = ch.cfg.crypto.EncryptMessage(messageKey, data, auth)
-		if err != nil {
-			return fmt.Errorf("%w: encrypt message: %w", errors.ErrCrypto, err)
-		}
-
-		return nil
-	})
+	encryptedHeader, err := ch.cfg.crypto.EncryptHeader(*ch.headerKey, header)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("%w: encrypt header: %w", errors.ErrCrypto, err)
+	}
+
+	messageKey, err := ch.advance()
+	if err != nil {
+		return nil, nil, fmt.Errorf("advance chain: %w", err)
+	}
+
+	auth = utils.ConcatByteSlices(encryptedHeader, auth)
+
+	encryptedData, err := ch.cfg.crypto.EncryptMessage(messageKey, data, auth)
+	if err != nil {
+		return nil, nil, fmt.Errorf("%w: encrypt message: %w", errors.ErrCrypto, err)
 	}
 
 	return encryptedHeader, encryptedData, nil
