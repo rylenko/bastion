@@ -21,20 +21,13 @@ func WithCrypto(crypto Crypto) Option {
 	}
 }
 
-func WithMessageKeysSkipLimit(limit uint64) Option {
-	return func(cfg *config) error {
-		cfg.messageKeysSkipLimit = limit
-		return nil
-	}
-}
-
-func WithSkippedMessageKeysStorage(storage SkippedMessageKeysStorage) Option {
+func WithSkippedKeysStorage(storage SkippedKeysStorage) Option {
 	return func(cfg *config) error {
 		if utils.IsNil(storage) {
 			return fmt.Errorf("%w: storage is nil", errors.ErrInvalidValue)
 		}
 
-		cfg.skippedMessageKeysStorage = storage
+		cfg.skippedKeysStorage = storage
 
 		return nil
 	}

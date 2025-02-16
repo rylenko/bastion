@@ -14,7 +14,6 @@ func main() {
 		keys.Root{},
 		keys.Header{},
 		keys.Header{},
-		ratchet.WithMessageKeysSkipLimit(0),
 	)
 	if err != nil {
 		log.Fatal("new ratchet sender: ", err)

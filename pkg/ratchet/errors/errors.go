@@ -3,7 +3,8 @@ package errors
 import "errors"
 
 var (
-	ErrCrypto       = errors.New("crypto")
-	ErrInvalidValue = errors.New("invalid value")
-	ErrOption       = errors.New("option")
+	ErrCrypto             = errors.New("crypto")
+	ErrInvalidValue       = errors.New("invalid value")
+	ErrOption             = errors.New("option")
+	ErrSkippedKeysStorage = errors.New("skipped keys storage")
 )

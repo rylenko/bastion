@@ -110,13 +110,13 @@ func (ch *Chain) decryptHeader(encryptedHeader []byte) (decryptedHeader header.H
 			return header, false, nil
 		}
 
-		err = stderrors.Join(err, decryptErr)
+		err = stderrors.Join(err, fmt.Errorf("%w: decrypt header with current key: %w", errors.ErrCrypto, decryptErr))
 	}
 
 	decryptedHeader, decryptErr := ch.cfg.crypto.DecryptHeader(ch.nextHeaderKey, encryptedHeader, ch.nextMessageNumber)
 	if decryptErr != nil {
-		err = stderrors.Join(err, decryptErr)
-		return header.Header{}, false, fmt.Errorf("decrypt header with current and next header keys: %w", err)
+		err = stderrors.Join(err, fmt.Errorf("%w: decrypt header with next header key: %w", errors.ErrCrypto, decryptErr))
+		return header.Header{}, false, err
 	}
 
 	// Note that here it is ok to ignore an error when decrypting with the current key if decryption with the next key
@@ -131,7 +131,7 @@ func (ch *Chain) handleEncryptedHeader(encryptedHeader []byte, ratchet RatchetCa
 	}
 
 	if needRatchet {
-		if err := ch.skipMessageKeys(decryptedHeader.PreviousSendingChainMessagesCount); err != nil {
+		if err := ch.skipKeys(decryptedHeader.PreviousSendingChainMessagesCount); err != nil {
 			return header.Header{}, fmt.Errorf("skip %d keys: %w", decryptedHeader.PreviousSendingChainMessagesCount, err)
 		}
 
@@ -140,16 +140,37 @@ func (ch *Chain) handleEncryptedHeader(encryptedHeader []byte, ratchet RatchetCa
 		}
 	}
 
-	if err := ch.skipMessageKeys(decryptedHeader.MessageNumber); err != nil {
+	if err := ch.skipKeys(decryptedHeader.MessageNumber); err != nil {
 		return header.Header{}, fmt.Errorf("skip %d message keys in upgraded chain: %w", decryptedHeader.MessageNumber, err)
 	}
 
 	return decryptedHeader, nil
 }
 
-func (ch *Chain) skipMessageKeys(untilMessageNumber uint64) error {
-	// TODO
-	return fmt.Errorf("%d", untilMessageNumber)
+func (ch *Chain) skipKeys(untilMessageNumber uint64) error {
+	if untilMessageNumber < ch.nextMessageNumber {
+		return fmt.Errorf("message number is small for the current chain, next message number is %d", ch.nextMessageNumber)
+	}
+
+	keysCount := untilMessageNumber - ch.nextMessageNumber
+
+	for messageNumber := ch.nextMessageNumber; messageNumber < untilMessageNumber; messageNumber++ {
+		messageKey, err := ch.advance()
+		if err != nil {
+			return fmt.Errorf("advance chain: %w", err)
+		}
+
+		if ch.headerKey == nil {
+			return fmt.Errorf("%w: header key is nil", errors.ErrInvalidValue)
+		}
+
+		if err := ch.cfg.skippedKeysStorage.Add(keysCount, *ch.headerKey, messageNumber, messageKey); err != nil {
+			return fmt.Errorf("%w: add: %w", errors.ErrSkippedKeysStorage, err)
+		}
+	}
+
+	return nil
 }
 
+// RatchetCallback must perform ratchet and upgrade receiving chain.
 type RatchetCallback func(remotePublicKey keys.Public) error

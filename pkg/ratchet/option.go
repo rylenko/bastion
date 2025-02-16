@@ -24,13 +24,6 @@ func WithCrypto(crypto Crypto) Option {
 	}
 }
 
-func WithMessageKeysSkipLimit(limit uint64) Option {
-	return func(cfg *config) error {
-		cfg.receivingOptions = append(cfg.receivingOptions, receivingchain.WithMessageKeysSkipLimit(limit))
-		return nil
-	}
-}
-
 func WithReceivingChainCrypto(crypto receivingchain.Crypto) Option {
 	return func(cfg *config) error {
 		cfg.receivingOptions = append(cfg.receivingOptions, receivingchain.WithCrypto(crypto))
@@ -52,9 +45,9 @@ func WithSendingChainCrypto(crypto sendingchain.Crypto) Option {
 	}
 }
 
-func WithSkippedMessageKeysStorage(storage receivingchain.SkippedMessageKeysStorage) Option {
+func WithSkippedKeysStorage(storage receivingchain.SkippedKeysStorage) Option {
 	return func(cfg *config) error {
-		cfg.receivingOptions = append(cfg.receivingOptions, receivingchain.WithSkippedMessageKeysStorage(storage))
+		cfg.receivingOptions = append(cfg.receivingOptions, receivingchain.WithSkippedKeysStorage(storage))
 		return nil
 	}
 }

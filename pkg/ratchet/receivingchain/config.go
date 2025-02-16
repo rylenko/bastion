@@ -6,19 +6,15 @@ import (
 	"github.com/rylenko/bastion/pkg/ratchet/errors"
 )
 
-const messageKeysSkipLimit = 1024
-
 type config struct {
-	crypto                    Crypto
-	messageKeysSkipLimit      uint64
-	skippedMessageKeysStorage SkippedMessageKeysStorage
+	crypto             Crypto
+	skippedKeysStorage SkippedKeysStorage
 }
 
 func newConfig(options []Option) (config, error) {
 	cfg := config{
-		crypto:                    newCrypto(),
-		messageKeysSkipLimit:      messageKeysSkipLimit,
-		skippedMessageKeysStorage: newSkippedMessageKeysStorage(),
+		crypto:             newCrypto(),
+		skippedKeysStorage: newSkippedKeysStorage(),
 	}
 	if err := cfg.applyOptions(options); err != nil {
 		return config{}, fmt.Errorf("%w: %w", errors.ErrOption, err)
@@ -38,6 +34,6 @@ func (cfg *config) applyOptions(options []Option) error {
 }
 
 func (cfg config) clone() config {
-	cfg.skippedMessageKeysStorage = cfg.skippedMessageKeysStorage.Clone()
+	cfg.skippedKeysStorage = cfg.skippedKeysStorage.Clone()
 	return cfg
 }
