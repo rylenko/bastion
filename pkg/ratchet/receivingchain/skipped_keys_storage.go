@@ -21,10 +21,6 @@ type SkippedKeysStorage interface {
 
 type skippedKeysStorage map[string]map[uint64]keys.Message
 
-func newSkippedKeysStorage() SkippedKeysStorage {
-	return make(skippedKeysStorage)
-}
-
 func (st skippedKeysStorage) Add(
 	totalAtOnceCount uint64,
 	headerKey keys.Header,
@@ -46,6 +42,17 @@ func (st skippedKeysStorage) Add(
 }
 
 func (st skippedKeysStorage) Clone() SkippedKeysStorage {
-	// TODO
-	return st
+	stClone := make(skippedKeysStorage, len(st))
+
+	for key, messageNumberKeys := range st {
+		messageNumberKeysClone := make(map[uint64]keys.Message, len(messageNumberKeys))
+
+		for messageNumber, messageKey := range messageNumberKeys {
+			messageNumberKeysClone[messageNumber] = messageKey.Clone()
+		}
+
+		stClone[key] = messageNumberKeysClone
+	}
+
+	return stClone
 }

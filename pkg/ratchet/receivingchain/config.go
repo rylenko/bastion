@@ -14,7 +14,7 @@ type config struct {
 func newConfig(options []Option) (config, error) {
 	cfg := config{
 		crypto:             newCrypto(),
-		skippedKeysStorage: newSkippedKeysStorage(),
+		skippedKeysStorage: make(skippedKeysStorage),
 	}
 	if err := cfg.applyOptions(options); err != nil {
 		return config{}, fmt.Errorf("%w: %w", errors.ErrOption, err)
