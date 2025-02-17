@@ -8,6 +8,14 @@ import (
 
 const skippedKeysStorageAddAtOnceLimit = 32
 
+type (
+	SkippedKeysIter  func(yield SkippedKeysYield)
+	SkippedKeysYield func(headerKey keys.Header, messageNumberKeysIter SkippedMessageNumberKeysIter) bool
+
+	SkippedMessageNumberKeysIter  func(yield SkippedMessageNumberKeysYield)
+	SkippedMessageNumberKeysYield func(number uint64, key keys.Message) bool
+)
+
 type SkippedKeysStorage interface {
 	// Add must add new skipped keys to storage.
 	//
@@ -17,6 +25,12 @@ type SkippedKeysStorage interface {
 
 	// Clone must deep clone a storage.
 	Clone() SkippedKeysStorage
+
+	// Delete must delete skipped keys by header key and message number.
+	Delete(headerKey keys.Header, messageNumber uint64) error
+
+	// GetIter must return function, which iterates over all skipped keys.
+	GetIter() (SkippedKeysIter, error)
 }
 
 type skippedKeysStorage map[string]map[uint64]keys.Message
@@ -31,12 +45,12 @@ func (st skippedKeysStorage) Add(
 		return fmt.Errorf("total count limit: %d > %d", totalAtOnceCount, skippedKeysStorageAddAtOnceLimit)
 	}
 
-	key := string(headerKey.Bytes)
-	if _, exists := st[key]; !exists {
-		st[key] = make(map[uint64]keys.Message, totalAtOnceCount)
+	headerKeyString := string(headerKey.Bytes)
+	if _, exists := st[headerKeyString]; !exists {
+		st[headerKeyString] = make(map[uint64]keys.Message, totalAtOnceCount)
 	}
 
-	st[key][messageNumber] = messageKey
+	st[headerKeyString][messageNumber] = messageKey
 
 	return nil
 }
@@ -44,15 +58,43 @@ func (st skippedKeysStorage) Add(
 func (st skippedKeysStorage) Clone() SkippedKeysStorage {
 	stClone := make(skippedKeysStorage, len(st))
 
-	for key, messageNumberKeys := range st {
+	for headerKeyString, messageNumberKeys := range st {
 		messageNumberKeysClone := make(map[uint64]keys.Message, len(messageNumberKeys))
 
 		for messageNumber, messageKey := range messageNumberKeys {
 			messageNumberKeysClone[messageNumber] = messageKey.Clone()
 		}
 
-		stClone[key] = messageNumberKeysClone
+		stClone[headerKeyString] = messageNumberKeysClone
 	}
 
 	return stClone
+}
+
+func (st skippedKeysStorage) Delete(headerKey keys.Header, messageNumber uint64) error {
+	delete(st[string(headerKey.Bytes)], messageNumber)
+
+	return nil
+}
+
+func (st skippedKeysStorage) GetIter() (SkippedKeysIter, error) {
+	iter := func(yield SkippedKeysYield) {
+		for headerKeyString, messageNumberKeys := range st {
+			headerKey := keys.Header{Bytes: []byte(headerKeyString)}
+
+			messageNumberKeysIter := func(yield SkippedMessageNumberKeysYield) {
+				for messageNumber, messageKey := range messageNumberKeys {
+					if !yield(messageNumber, messageKey) {
+						return
+					}
+				}
+			}
+
+			if !yield(headerKey, messageNumberKeysIter) {
+				return
+			}
+		}
+	}
+
+	return iter, nil
 }
