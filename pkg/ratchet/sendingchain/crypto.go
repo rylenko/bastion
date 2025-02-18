@@ -2,6 +2,7 @@ package sendingchain
 
 import (
 	"crypto/hmac"
+	"crypto/rand"
 	"fmt"
 	"hash"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/rylenko/bastion/pkg/ratchet/header"
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
 	"github.com/rylenko/bastion/pkg/ratchet/messagechainscommon"
+	"github.com/rylenko/bastion/pkg/ratchet/utils"
 )
 
 type Crypto interface {
@@ -52,12 +54,17 @@ func (c crypto) AdvanceChain(masterKey keys.MessageMaster) (keys.MessageMaster, 
 }
 
 func (c crypto) EncryptHeader(key keys.Header, header header.Header) ([]byte, error) {
-	cipherKey, nonce, err := messagechainscommon.DeriveHeaderCipherKeyAndNonce(key, header.MessageNumber)
-	if err != nil {
-		return nil, fmt.Errorf("derive key and nonce: %w", err)
+	var nonce [cipher.NonceSizeX]byte
+	if _, err := rand.Read(nonce[:]); err != nil {
+		return nil, fmt.Errorf("generate random nonce: %w", err)
 	}
 
-	return c.encrypt(cipherKey, nonce, header.Encode(), nil)
+	encryptedHeader, err := c.encrypt(key.Bytes, nonce[:], header.Encode(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return utils.ConcatByteSlices(nonce[:], encryptedHeader), nil
 }
 
 func (c crypto) EncryptMessage(key keys.Message, data, auth []byte) ([]byte, error) {

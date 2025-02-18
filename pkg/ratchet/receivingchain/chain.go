@@ -122,7 +122,7 @@ func (ch *Chain) decryptHeaderWithCurrentOrNextKey(
 	encryptedHeader []byte,
 ) (decryptedHeader header.Header, needRatchet bool, err error) {
 	if ch.headerKey != nil {
-		header, decryptErr := ch.cfg.crypto.DecryptHeader(*ch.headerKey, encryptedHeader, ch.nextMessageNumber)
+		header, decryptErr := ch.cfg.crypto.DecryptHeader(*ch.headerKey, encryptedHeader)
 		if decryptErr == nil {
 			return header, false, nil
 		}
@@ -130,7 +130,7 @@ func (ch *Chain) decryptHeaderWithCurrentOrNextKey(
 		err = stderrors.Join(err, fmt.Errorf("%w: decrypt header with current key: %w", errors.ErrCrypto, decryptErr))
 	}
 
-	decryptedHeader, decryptErr := ch.cfg.crypto.DecryptHeader(ch.nextHeaderKey, encryptedHeader, ch.nextMessageNumber)
+	decryptedHeader, decryptErr := ch.cfg.crypto.DecryptHeader(ch.nextHeaderKey, encryptedHeader)
 	if decryptErr != nil {
 		err = stderrors.Join(err, fmt.Errorf("%w: decrypt header with next header key: %w", errors.ErrCrypto, decryptErr))
 		return header.Header{}, false, err
@@ -148,7 +148,7 @@ func (ch *Chain) decryptWithSkippedKeys(encryptedHeader, encryptedData, auth []b
 	}
 
 	for headerKey, messageNumberKeys := range iter {
-		decryptedHeader, err := ch.cfg.crypto.DecryptHeader(headerKey, encryptedHeader, ch.nextMessageNumber)
+		decryptedHeader, err := ch.cfg.crypto.DecryptHeader(headerKey, encryptedHeader)
 		if err != nil {
 			continue
 		}

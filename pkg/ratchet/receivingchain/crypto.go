@@ -15,7 +15,7 @@ import (
 
 type Crypto interface {
 	AdvanceChain(masterKey keys.MessageMaster) (keys.MessageMaster, keys.Message, error)
-	DecryptHeader(key keys.Header, encryptedHeader []byte, messageNumber uint64) (header.Header, error)
+	DecryptHeader(key keys.Header, encryptedHeader []byte) (header.Header, error)
 	DecryptMessage(key keys.Message, encryptedData, auth []byte) ([]byte, error)
 }
 
@@ -51,18 +51,18 @@ func (c crypto) AdvanceChain(masterKey keys.MessageMaster) (keys.MessageMaster, 
 	return newMasterKey, messageKey, nil
 }
 
-func (c crypto) DecryptHeader(key keys.Header, encryptedHeader []byte, messageNumber uint64) (header.Header, error) {
-	cipherKey, nonce, err := messagechainscommon.DeriveHeaderCipherKeyAndNonce(key, messageNumber)
-	if err != nil {
-		return header.Header{}, fmt.Errorf("derive key and nonce: %w", err)
+func (c crypto) DecryptHeader(key keys.Header, encryptedHeader []byte) (header.Header, error) {
+	if len(encryptedHeader) <= cipher.NonceSizeX {
+		return header.Header{}, fmt.Errorf("encrpted header too short, expected at least %d bytes", cipher.NonceSizeX+1)
 	}
 
-	headerBytes, err := c.decrypt(cipherKey, nonce, encryptedHeader, nil)
+	decryptedHeaderBytes, err := c.decrypt(
+		key.Bytes, encryptedHeader[:cipher.NonceSizeX], encryptedHeader[cipher.NonceSizeX:], nil)
 	if err != nil {
 		return header.Header{}, err
 	}
 
-	decryptedHeader, err := header.Decode(headerBytes)
+	decryptedHeader, err := header.Decode(decryptedHeaderBytes)
 	if err != nil {
 		return header.Header{}, fmt.Errorf("decode decrypted header: %w", err)
 	}
