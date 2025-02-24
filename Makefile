@@ -4,7 +4,7 @@ bin/:
 	mkdir -p $@
 
 bin/golangci-lint: | bin/
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.63.4
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh
 
 clean:
 	rm -rf bin test-coverage test-coverage.html
