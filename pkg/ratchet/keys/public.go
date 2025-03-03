@@ -16,5 +16,6 @@ func (pk *Public) ClonePtr() *Public {
 		return nil
 	}
 
-	return &Public{Bytes: utils.CloneByteSlice(pk.Bytes)}
+	clone := (*pk).Clone()
+	return &clone
 }

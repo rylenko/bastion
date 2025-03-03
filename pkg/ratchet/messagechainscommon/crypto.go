@@ -16,7 +16,6 @@ const cryptoMessageCipherKDFOutputLen = cipher.KeySize + cipher.NonceSizeX
 
 var (
 	cryptoMessageCipherKDFSalt = make([]byte, cryptoMessageCipherKDFOutputLen)
-
 	cryptoMessageCipherKDFInfo = []byte("message cipher")
 )
 
@@ -34,5 +33,5 @@ func DeriveMessageCipherKeyAndNonce(messageKey keys.Message) ([]byte, []byte, er
 		return nil, nil, fmt.Errorf("KDF: %w", err)
 	}
 
-	return output[:cipher.KeySize], output[cipher.KeySize : cipher.KeySize+cipher.NonceSizeX], nil
+	return output[:cipher.KeySize], output[cipher.KeySize:], nil
 }

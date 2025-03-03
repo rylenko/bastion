@@ -6,10 +6,16 @@ type MessageMaster struct {
 	Bytes []byte
 }
 
+func (mk MessageMaster) Clone() MessageMaster {
+	mk.Bytes = utils.CloneByteSlice(mk.Bytes)
+	return mk
+}
+
 func (mk *MessageMaster) ClonePtr() *MessageMaster {
 	if mk == nil {
 		return nil
 	}
 
-	return &MessageMaster{Bytes: utils.CloneByteSlice(mk.Bytes)}
+	clone := (*mk).Clone()
+	return &clone
 }

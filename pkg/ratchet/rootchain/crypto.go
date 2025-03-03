@@ -43,7 +43,7 @@ func (crypto crypto) AdvanceChain(
 
 	newRootKey := keys.Root{Bytes: output[:32]}
 	messageMasterKey := keys.MessageMaster{Bytes: output[32:64]}
-	nextHeaderKey := keys.Header{Bytes: output[64:96]}
+	nextHeaderKey := keys.Header{Bytes: output[64:]}
 
 	return newRootKey, messageMasterKey, nextHeaderKey, nil
 }

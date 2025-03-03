@@ -16,5 +16,6 @@ func (hk *Header) ClonePtr() *Header {
 		return nil
 	}
 
-	return &Header{Bytes: utils.CloneByteSlice(hk.Bytes)}
+	clone := (*hk).Clone()
+	return &clone
 }

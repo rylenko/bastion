@@ -7,5 +7,6 @@ type Message struct {
 }
 
 func (mk Message) Clone() Message {
-	return Message{Bytes: utils.CloneByteSlice(mk.Bytes)}
+	mk.Bytes = utils.CloneByteSlice(mk.Bytes)
+	return mk
 }
