@@ -16,6 +16,7 @@ func (mk *MessageMaster) ClonePtr() *MessageMaster {
 		return nil
 	}
 
-	clone := (*mk).Clone()
+	clone := mk.Clone()
+
 	return &clone
 }

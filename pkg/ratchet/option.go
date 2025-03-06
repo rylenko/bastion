@@ -24,30 +24,23 @@ func WithCrypto(crypto Crypto) Option {
 	}
 }
 
-func WithReceivingChainCrypto(crypto receivingchain.Crypto) Option {
+func WithReceivingChainOptions(options ...receivingchain.Option) Option {
 	return func(cfg *config) error {
-		cfg.receivingOptions = append(cfg.receivingOptions, receivingchain.WithCrypto(crypto))
+		cfg.receivingOptions = options
 		return nil
 	}
 }
 
-func WithRootChainCrypto(crypto rootchain.Crypto) Option {
+func WithRootChainOptions(options ...rootchain.Option) Option {
 	return func(cfg *config) error {
-		cfg.rootOptions = append(cfg.rootOptions, rootchain.WithCrypto(crypto))
+		cfg.rootOptions = options
 		return nil
 	}
 }
 
-func WithSendingChainCrypto(crypto sendingchain.Crypto) Option {
+func WithSendingChainOptions(options ...sendingchain.Option) Option {
 	return func(cfg *config) error {
-		cfg.sendingOptions = append(cfg.sendingOptions, sendingchain.WithCrypto(crypto))
-		return nil
-	}
-}
-
-func WithSkippedKeysStorage(storage receivingchain.SkippedKeysStorage) Option {
-	return func(cfg *config) error {
-		cfg.receivingOptions = append(cfg.receivingOptions, receivingchain.WithSkippedKeysStorage(storage))
+		cfg.sendingOptions = options
 		return nil
 	}
 }

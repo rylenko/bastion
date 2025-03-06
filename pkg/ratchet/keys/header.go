@@ -16,6 +16,7 @@ func (hk *Header) ClonePtr() *Header {
 		return nil
 	}
 
-	clone := (*hk).Clone()
+	clone := hk.Clone()
+
 	return &clone
 }

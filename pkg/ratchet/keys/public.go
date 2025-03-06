@@ -16,6 +16,7 @@ func (pk *Public) ClonePtr() *Public {
 		return nil
 	}
 
-	clone := (*pk).Clone()
+	clone := pk.Clone()
+
 	return &clone
 }
