@@ -150,7 +150,6 @@ func (r *Ratchet) Encrypt(data, auth []byte) (encryptedHeader []byte, encryptedD
 		}
 
 		header := r.sendingChain.PrepareHeader(r.localPublicKey)
-
 		encryptedHeader, encryptedData, err = r.sendingChain.Encrypt(header, data, auth)
 
 		return err
