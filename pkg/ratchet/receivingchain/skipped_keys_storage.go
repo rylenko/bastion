@@ -6,7 +6,10 @@ import (
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
 )
 
-const skippedKeysStorageAddAtOnceLimit = 32
+const (
+	skippedKeysStorageMessageKeysLenLimit  = 1024
+	skippedKeysStorageHeaderKeysLenToClear = 4
+)
 
 type (
 	SkippedKeysIter  func(yield SkippedKeysYield)
@@ -18,10 +21,7 @@ type (
 
 type SkippedKeysStorage interface {
 	// Add must add new skipped keys to storage.
-	//
-	// Total count indicates the total count of additions that will be made at once. This is useful to only allocate memory
-	// once or to limit clutter from a large number of missed keys.
-	Add(totalAtOnceCount uint64, headerKey keys.Header, messageNumber uint64, messageKey keys.Message) error
+	Add(headerKey keys.Header, messageNumber uint64, messageKey keys.Message) error
 
 	// Clone must deep clone a storage.
 	Clone() SkippedKeysStorage
@@ -35,22 +35,19 @@ type SkippedKeysStorage interface {
 
 type skippedKeysStorage map[string]map[uint64]keys.Message
 
-func (st skippedKeysStorage) Add(
-	totalAtOnceCount uint64,
-	headerKey keys.Header,
-	messageNumber uint64,
-	messageKey keys.Message,
-) error {
-	if totalAtOnceCount > skippedKeysStorageAddAtOnceLimit {
-		return fmt.Errorf("total count limit: %d > %d", totalAtOnceCount, skippedKeysStorageAddAtOnceLimit)
+func (st skippedKeysStorage) Add(headerKey keys.Header, messageNumber uint64, messageKey keys.Message) error {
+	stKey := string(headerKey.Bytes)
+	if len(st[stKey]) >= skippedKeysStorageMessageKeysLenLimit {
+		return fmt.Errorf("too many message keys: %d >= %d", len(st[stKey]), skippedKeysStorageMessageKeysLenLimit)
 	}
 
-	headerKeyString := string(headerKey.Bytes)
-	if _, exists := st[headerKeyString]; !exists {
-		st[headerKeyString] = make(map[uint64]keys.Message, totalAtOnceCount)
+	st.clearIfNeeded()
+
+	if _, ok := st[stKey]; !ok {
+		st[stKey] = make(map[uint64]keys.Message)
 	}
 
-	st[headerKeyString][messageNumber] = messageKey
+	st[stKey][messageNumber] = messageKey
 
 	return nil
 }
@@ -58,14 +55,14 @@ func (st skippedKeysStorage) Add(
 func (st skippedKeysStorage) Clone() SkippedKeysStorage {
 	stClone := make(skippedKeysStorage, len(st))
 
-	for headerKeyString, messageNumberKeys := range st {
+	for stKey, messageNumberKeys := range st {
 		messageNumberKeysClone := make(map[uint64]keys.Message, len(messageNumberKeys))
 
 		for messageNumber, messageKey := range messageNumberKeys {
 			messageNumberKeysClone[messageNumber] = messageKey.Clone()
 		}
 
-		stClone[headerKeyString] = messageNumberKeysClone
+		stClone[stKey] = messageNumberKeysClone
 	}
 
 	return stClone
@@ -79,8 +76,8 @@ func (st skippedKeysStorage) Delete(headerKey keys.Header, messageNumber uint64)
 
 func (st skippedKeysStorage) GetIter() (SkippedKeysIter, error) {
 	iter := func(yield SkippedKeysYield) {
-		for headerKeyString, messageNumberKeys := range st {
-			headerKey := keys.Header{Bytes: []byte(headerKeyString)}
+		for stKey, messageNumberKeys := range st {
+			headerKey := keys.Header{Bytes: []byte(stKey)}
 
 			messageNumberKeysIter := func(yield SkippedMessageNumberKeysYield) {
 				for messageNumber, messageKey := range messageNumberKeys {
@@ -97,4 +94,12 @@ func (st skippedKeysStorage) GetIter() (SkippedKeysIter, error) {
 	}
 
 	return iter, nil
+}
+
+func (st skippedKeysStorage) clearIfNeeded() {
+	if len(st) > skippedKeysStorageHeaderKeysLenToClear {
+		for stKey := range st {
+			delete(st, stKey)
+		}
+	}
 }

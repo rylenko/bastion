@@ -15,13 +15,14 @@ import (
 //
 // Please note that the structure is not safe for concurrent programs.
 type Ratchet struct {
-	localPrivateKey keys.Private
-	localPublicKey  keys.Public
-	remotePublicKey *keys.Public
-	rootChain       rootchain.Chain
-	sendingChain    sendingchain.Chain
-	receivingChain  receivingchain.Chain
-	cfg             config
+	localPrivateKey         keys.Private
+	localPublicKey          keys.Public
+	remotePublicKey         *keys.Public
+	rootChain               rootchain.Chain
+	sendingChain            sendingchain.Chain
+	receivingChain          receivingchain.Chain
+	needSendingChainRatchet bool
+	cfg                     config
 }
 
 // TODO: try to reduce arguments count.
@@ -133,41 +134,32 @@ func (r Ratchet) Clone() Ratchet {
 	return r
 }
 
-func (r *Ratchet) Decrypt(encryptedHeader, encryptedData, auth []byte) ([]byte, error) {
-	var data []byte
-
-	err := utils.UpdateWithTx(r, r.Clone(), func(r *Ratchet) error {
-		var err error
-		_, data, err = r.receivingChain.Decrypt(encryptedHeader, encryptedData, auth, r.ratchet)
-
+func (r *Ratchet) Decrypt(encryptedHeader, encryptedData, auth []byte) (data []byte, err error) {
+	err = utils.UpdateWithTx(r, r.Clone(), func(r *Ratchet) error {
+		data, err = r.receivingChain.Decrypt(encryptedHeader, encryptedData, auth, r.ratchetReceivingChain)
 		return err
 	})
-	if err != nil {
-		return nil, err
-	}
 
-	return data, nil
+	return data, err
 }
 
-func (r *Ratchet) Encrypt(data, auth []byte) ([]byte, []byte, error) {
-	var encryptedHeader, encryptedData []byte
+func (r *Ratchet) Encrypt(data, auth []byte) (encryptedHeader []byte, encryptedData []byte, err error) {
+	err = utils.UpdateWithTx(r, r.Clone(), func(r *Ratchet) error {
+		if err := r.ratchetSendingChainIfNeeded(); err != nil {
+			return fmt.Errorf("ratchet sending chain: %w", err)
+		}
 
-	header := r.sendingChain.PrepareHeader(r.localPublicKey)
+		header := r.sendingChain.PrepareHeader(r.localPublicKey)
 
-	err := utils.UpdateWithTx(r, r.Clone(), func(r *Ratchet) error {
-		var err error
 		encryptedHeader, encryptedData, err = r.sendingChain.Encrypt(header, data, auth)
 
 		return err
 	})
-	if err != nil {
-		return nil, nil, err
-	}
 
-	return encryptedHeader, encryptedData, nil
+	return encryptedHeader, encryptedData, err
 }
 
-func (r *Ratchet) ratchet(remotePublicKey keys.Public) error {
+func (r *Ratchet) ratchetReceivingChain(remotePublicKey keys.Public) error {
 	r.remotePublicKey = &remotePublicKey
 
 	sharedKey, err := r.cfg.crypto.ComputeSharedKey(r.localPrivateKey, remotePublicKey)
@@ -181,23 +173,39 @@ func (r *Ratchet) ratchet(remotePublicKey keys.Public) error {
 	}
 
 	r.receivingChain.Upgrade(newMasterKey, newNextHeaderKey)
+	r.needSendingChainRatchet = true
+
+	return nil
+}
+
+func (r *Ratchet) ratchetSendingChainIfNeeded() error {
+	if !r.needSendingChainRatchet {
+		return nil
+	}
+
+	var err error
 
 	r.localPrivateKey, r.localPublicKey, err = r.cfg.crypto.GenerateKeyPair()
 	if err != nil {
 		return fmt.Errorf("%w: generate new key pair: %w", errors.ErrCrypto, err)
 	}
 
-	sharedKey, err = r.cfg.crypto.ComputeSharedKey(r.localPrivateKey, remotePublicKey)
+	if r.remotePublicKey == nil {
+		return fmt.Errorf("%w: remote public key is nil", errors.ErrInvalidValue)
+	}
+
+	sharedKey, err := r.cfg.crypto.ComputeSharedKey(r.localPrivateKey, *r.remotePublicKey)
 	if err != nil {
 		return fmt.Errorf("%w: compute shared secret key for sending chain upgrade: %w", errors.ErrCrypto, err)
 	}
 
-	newMasterKey, newNextHeaderKey, err = r.rootChain.Advance(sharedKey)
+	newMasterKey, newNextHeaderKey, err := r.rootChain.Advance(sharedKey)
 	if err != nil {
 		return fmt.Errorf("advance root chain for sending chain upgrade: %w", err)
 	}
 
 	r.sendingChain.Upgrade(newMasterKey, newNextHeaderKey)
+	r.needSendingChainRatchet = false
 
 	return nil
 }
