@@ -68,22 +68,19 @@ func (ch *Chain) Decrypt(
 	err = fmt.Errorf("decrypt with skipped keys: %w", err)
 
 	if handleErr := ch.handleEncryptedHeader(encryptedHeader, ratchet); handleErr != nil {
-		handleErr = fmt.Errorf("handle encrypted header: %w", handleErr)
-		return nil, stderrors.Join(err, handleErr)
+		return nil, stderrors.Join(err, fmt.Errorf("handle encrypted header: %w", handleErr))
 	}
 
 	messageKey, advanceErr := ch.advance()
 	if advanceErr != nil {
-		advanceErr = fmt.Errorf("advance chain: %w", err)
-		return nil, stderrors.Join(err, advanceErr)
+		return nil, stderrors.Join(err, fmt.Errorf("advance chain: %w", err))
 	}
 
 	auth = utils.ConcatByteSlices(encryptedHeader, auth)
 
 	decryptedData, decryptErr := ch.cfg.crypto.DecryptMessage(messageKey, encryptedData, auth)
 	if decryptErr != nil {
-		decryptErr = fmt.Errorf("%w: decrypt message: %w", errors.ErrCrypto, decryptErr)
-		return nil, stderrors.Join(err, decryptErr)
+		return nil, stderrors.Join(err, fmt.Errorf("%w: decrypt message: %w", errors.ErrCrypto, decryptErr))
 	}
 
 	// Note that here it is ok to ignore an error when decrypting with skipped keys if decryption with the next message key
