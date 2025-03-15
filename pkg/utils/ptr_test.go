@@ -12,13 +12,18 @@ func TestIsNil(t *testing.T) {
 		result bool
 	}{
 		{nil, true},
-		{[]int(nil), true},
 		{map[string]string(nil), true},
+		{map[string]string{"hello": "world"}, false},
 		{(*int)(nil), true},
 		{5, false},
 		{"string", false},
+		{[]int(nil), true},
 		{[]int{1, 2, 3}, false},
 		{&intValue, false},
+		{(chan int)(nil), true},
+		{make(chan int), false},
+		{(func())(nil), true},
+		{TestIsNil, false},
 	}
 
 	for _, test := range tests {
