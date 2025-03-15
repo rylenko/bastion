@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/rylenko/bastion/pkg/ratchet/errors"
-	"github.com/rylenko/bastion/pkg/ratchet/utils"
+	"github.com/rylenko/bastion/pkg/utils"
 )
 
 type Option func(cfg *config) error

@@ -1,10 +1,6 @@
 package utils
 
-import (
-	"fmt"
-
-	"github.com/rylenko/bastion/pkg/ratchet/errors"
-)
+import "errors"
 
 type TxFunc[T any] func(dirty *T) error
 
@@ -17,7 +13,7 @@ func UpdateWithTx[T any](target *T, dirty T, tx TxFunc[T]) error {
 	}
 
 	if target == nil {
-		return fmt.Errorf("%w: target is nil", errors.ErrInvalidValue)
+		return errors.New("target is nil")
 	}
 
 	*target = dirty

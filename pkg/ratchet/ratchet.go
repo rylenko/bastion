@@ -8,7 +8,7 @@ import (
 	"github.com/rylenko/bastion/pkg/ratchet/receivingchain"
 	"github.com/rylenko/bastion/pkg/ratchet/rootchain"
 	"github.com/rylenko/bastion/pkg/ratchet/sendingchain"
-	"github.com/rylenko/bastion/pkg/ratchet/utils"
+	"github.com/rylenko/bastion/pkg/utils"
 )
 
 // Ratchet is the participant of the conversation.

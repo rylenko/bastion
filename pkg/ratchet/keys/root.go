@@ -1,6 +1,6 @@
 package keys
 
-import "github.com/rylenko/bastion/pkg/ratchet/utils"
+import "github.com/rylenko/bastion/pkg/utils"
 
 type Root struct {
 	Bytes []byte
