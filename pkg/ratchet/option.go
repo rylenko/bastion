@@ -3,7 +3,7 @@ package ratchet
 import (
 	"fmt"
 
-	"github.com/rylenko/bastion/pkg/ratchet/errors"
+	"github.com/rylenko/bastion/pkg/ratchet/errlist"
 	"github.com/rylenko/bastion/pkg/ratchet/receivingchain"
 	"github.com/rylenko/bastion/pkg/ratchet/rootchain"
 	"github.com/rylenko/bastion/pkg/ratchet/sendingchain"
@@ -15,7 +15,7 @@ type Option func(cfg *config) error
 func WithCrypto(crypto Crypto) Option {
 	return func(cfg *config) error {
 		if utils.IsNil(crypto) {
-			return fmt.Errorf("%w: crypto is nil", errors.ErrInvalidValue)
+			return fmt.Errorf("%w: crypto is nil", errlist.ErrInvalidValue)
 		}
 
 		cfg.crypto = crypto

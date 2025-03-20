@@ -3,7 +3,7 @@ package rootchain
 import (
 	"fmt"
 
-	"github.com/rylenko/bastion/pkg/ratchet/errors"
+	"github.com/rylenko/bastion/pkg/ratchet/errlist"
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
 )
 
@@ -24,7 +24,7 @@ func New(key keys.Root, options ...Option) (Chain, error) {
 func (ch *Chain) Advance(sharedKey keys.Shared) (keys.MessageMaster, keys.Header, error) {
 	newRootKey, messageMasterKey, nextHeaderKey, err := ch.cfg.crypto.AdvanceChain(ch.key, sharedKey)
 	if err != nil {
-		return keys.MessageMaster{}, keys.Header{}, fmt.Errorf("%w: advance: %w", errors.ErrCrypto, err)
+		return keys.MessageMaster{}, keys.Header{}, fmt.Errorf("%w: advance: %w", errlist.ErrCrypto, err)
 	}
 
 	ch.key = newRootKey

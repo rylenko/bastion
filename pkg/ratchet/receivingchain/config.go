@@ -3,7 +3,7 @@ package receivingchain
 import (
 	"fmt"
 
-	"github.com/rylenko/bastion/pkg/ratchet/errors"
+	"github.com/rylenko/bastion/pkg/ratchet/errlist"
 )
 
 type config struct {
@@ -17,7 +17,7 @@ func newConfig(options []Option) (config, error) {
 		skippedKeysStorage: newDefaultSkippedKeysStorage(),
 	}
 	if err := cfg.applyOptions(options); err != nil {
-		return config{}, fmt.Errorf("%w: %w", errors.ErrOption, err)
+		return config{}, fmt.Errorf("%w: %w", errlist.ErrOption, err)
 	}
 
 	return cfg, nil

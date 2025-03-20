@@ -1,11 +1,11 @@
 package header
 
 import (
-	stderrors "errors"
+	"errors"
 	"slices"
 	"testing"
 
-	"github.com/rylenko/bastion/pkg/ratchet/errors"
+	"github.com/rylenko/bastion/pkg/ratchet/errlist"
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
 )
 
@@ -84,14 +84,14 @@ func TestHeaderDecodeError(t *testing.T) {
 				0x12, 0x00, 0x00, 0x00, 0x22, 0x00, 0x00, 0x0F,
 				0x55, 0x00, 0x00, 0x00, 0x77, 0x00, 0x0B,
 			},
-			errors.ErrInvalidValue,
+			errlist.ErrInvalidValue,
 			"invalid value: not enough bytes",
 		},
-		{nil, errors.ErrInvalidValue, "invalid value: not enough bytes"},
+		{nil, errlist.ErrInvalidValue, "invalid value: not enough bytes"},
 	}
 
 	for _, test := range tests {
-		if _, err := Decode(test.bytes); !stderrors.Is(err, test.errorCategory) || err.Error() != test.errorString {
+		if _, err := Decode(test.bytes); !errors.Is(err, test.errorCategory) || err.Error() != test.errorString {
 			t.Fatalf("Decode(%v) expected error %q but got %v", test.bytes, test.errorString, err)
 		}
 	}

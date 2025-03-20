@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/rylenko/bastion/pkg/ratchet/errors"
+	"github.com/rylenko/bastion/pkg/ratchet/errlist"
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
 	"github.com/rylenko/bastion/pkg/utils"
 )
@@ -17,7 +17,7 @@ type Header struct {
 
 func Decode(bytes []byte) (Header, error) {
 	if len(bytes) < 2*utils.Uint64Size {
-		return Header{}, fmt.Errorf("%w: not enough bytes", errors.ErrInvalidValue)
+		return Header{}, fmt.Errorf("%w: not enough bytes", errlist.ErrInvalidValue)
 	}
 
 	header := Header{}

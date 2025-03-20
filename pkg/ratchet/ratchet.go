@@ -3,7 +3,7 @@ package ratchet
 import (
 	"fmt"
 
-	"github.com/rylenko/bastion/pkg/ratchet/errors"
+	"github.com/rylenko/bastion/pkg/ratchet/errlist"
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
 	"github.com/rylenko/bastion/pkg/ratchet/receivingchain"
 	"github.com/rylenko/bastion/pkg/ratchet/rootchain"
@@ -81,12 +81,12 @@ func NewSender(
 
 	localPrivateKey, localPublicKey, err := cfg.crypto.GenerateKeyPair()
 	if err != nil {
-		return Ratchet{}, fmt.Errorf("%w: generate key pair: %w", errors.ErrCrypto, err)
+		return Ratchet{}, fmt.Errorf("%w: generate key pair: %w", errlist.ErrCrypto, err)
 	}
 
 	sharedKey, err := cfg.crypto.ComputeSharedKey(localPrivateKey, remotePublicKey)
 	if err != nil {
-		return Ratchet{}, fmt.Errorf("%w: compute shared key: %w", errors.ErrCrypto, err)
+		return Ratchet{}, fmt.Errorf("%w: compute shared key: %w", errlist.ErrCrypto, err)
 	}
 
 	rootChain, err := rootchain.New(rootKey, cfg.rootOptions...)
@@ -163,7 +163,7 @@ func (r *Ratchet) ratchetReceivingChain(remotePublicKey keys.Public) error {
 
 	sharedKey, err := r.cfg.crypto.ComputeSharedKey(r.localPrivateKey, remotePublicKey)
 	if err != nil {
-		return fmt.Errorf("%w: compute shared secret key for receiving chain upgrade: %w", errors.ErrCrypto, err)
+		return fmt.Errorf("%w: compute shared secret key for receiving chain upgrade: %w", errlist.ErrCrypto, err)
 	}
 
 	newMasterKey, newNextHeaderKey, err := r.rootChain.Advance(sharedKey)
@@ -186,16 +186,16 @@ func (r *Ratchet) ratchetSendingChainIfNeeded() error {
 
 	r.localPrivateKey, r.localPublicKey, err = r.cfg.crypto.GenerateKeyPair()
 	if err != nil {
-		return fmt.Errorf("%w: generate new key pair: %w", errors.ErrCrypto, err)
+		return fmt.Errorf("%w: generate new key pair: %w", errlist.ErrCrypto, err)
 	}
 
 	if r.remotePublicKey == nil {
-		return fmt.Errorf("%w: remote public key is nil", errors.ErrInvalidValue)
+		return fmt.Errorf("%w: remote public key is nil", errlist.ErrInvalidValue)
 	}
 
 	sharedKey, err := r.cfg.crypto.ComputeSharedKey(r.localPrivateKey, *r.remotePublicKey)
 	if err != nil {
-		return fmt.Errorf("%w: compute shared secret key for sending chain upgrade: %w", errors.ErrCrypto, err)
+		return fmt.Errorf("%w: compute shared secret key for sending chain upgrade: %w", errlist.ErrCrypto, err)
 	}
 
 	newMasterKey, newNextHeaderKey, err := r.rootChain.Advance(sharedKey)

@@ -3,7 +3,7 @@ package sendingchain
 import (
 	"fmt"
 
-	"github.com/rylenko/bastion/pkg/ratchet/errors"
+	"github.com/rylenko/bastion/pkg/ratchet/errlist"
 	"github.com/rylenko/bastion/pkg/ratchet/header"
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
 	"github.com/rylenko/bastion/pkg/utils"
@@ -57,12 +57,12 @@ func (ch Chain) Clone() Chain {
 
 func (ch *Chain) Encrypt(header header.Header, data, auth []byte) ([]byte, []byte, error) {
 	if ch.headerKey == nil {
-		return nil, nil, fmt.Errorf("%w: header key is nil", errors.ErrInvalidValue)
+		return nil, nil, fmt.Errorf("%w: header key is nil", errlist.ErrInvalidValue)
 	}
 
 	encryptedHeader, err := ch.cfg.crypto.EncryptHeader(*ch.headerKey, header)
 	if err != nil {
-		return nil, nil, fmt.Errorf("%w: encrypt header: %w", errors.ErrCrypto, err)
+		return nil, nil, fmt.Errorf("%w: encrypt header: %w", errlist.ErrCrypto, err)
 	}
 
 	messageKey, err := ch.advance()
@@ -74,7 +74,7 @@ func (ch *Chain) Encrypt(header header.Header, data, auth []byte) ([]byte, []byt
 
 	encryptedData, err := ch.cfg.crypto.EncryptMessage(messageKey, data, auth)
 	if err != nil {
-		return nil, nil, fmt.Errorf("%w: encrypt message: %w", errors.ErrCrypto, err)
+		return nil, nil, fmt.Errorf("%w: encrypt message: %w", errlist.ErrCrypto, err)
 	}
 
 	return encryptedHeader, encryptedData, nil
@@ -98,12 +98,12 @@ func (ch *Chain) Upgrade(masterKey keys.MessageMaster, nextHeaderKey keys.Header
 
 func (ch *Chain) advance() (keys.Message, error) {
 	if ch.masterKey == nil {
-		return keys.Message{}, fmt.Errorf("%w: master key is nil", errors.ErrInvalidValue)
+		return keys.Message{}, fmt.Errorf("%w: master key is nil", errlist.ErrInvalidValue)
 	}
 
 	newMasterKey, messageKey, err := ch.cfg.crypto.AdvanceChain(*ch.masterKey)
 	if err != nil {
-		return keys.Message{}, fmt.Errorf("%w: advance via crypto: %w", errors.ErrCrypto, err)
+		return keys.Message{}, fmt.Errorf("%w: advance via crypto: %w", errlist.ErrCrypto, err)
 	}
 
 	ch.masterKey = &newMasterKey
