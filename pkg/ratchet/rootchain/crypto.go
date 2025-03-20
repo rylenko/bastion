@@ -11,21 +11,21 @@ import (
 	"github.com/rylenko/bastion/pkg/ratchet/keys"
 )
 
-const kdfOutputLen = 3 * 32
+const defaultCryptoKDFOutputLen = 3 * 32
 
-var cryptoAdvanceChainKDFInfo = []byte("advance root chain")
+var defaultCryptoKDFInfo = []byte("advance root chain")
 
 type Crypto interface {
 	AdvanceChain(rootKey keys.Root, sharedKey keys.Shared) (keys.Root, keys.MessageMaster, keys.Header, error)
 }
 
-type crypto struct{}
+type defaultCrypto struct{}
 
-func newCrypto() Crypto {
-	return crypto{}
+func newDefaultCrypto() defaultCrypto {
+	return defaultCrypto{}
 }
 
-func (crypto crypto) AdvanceChain(
+func (crypto defaultCrypto) AdvanceChain(
 	rootKey keys.Root,
 	sharedKey keys.Shared,
 ) (keys.Root, keys.MessageMaster, keys.Header, error) {
@@ -34,9 +34,9 @@ func (crypto crypto) AdvanceChain(
 		return keys.Root{}, keys.MessageMaster{}, keys.Header{}, fmt.Errorf("new hash: %w", err)
 	}
 
-	kdf := hkdf.New(func() hash.Hash { return hasher }, sharedKey.Bytes, rootKey.Bytes, cryptoAdvanceChainKDFInfo)
+	kdf := hkdf.New(func() hash.Hash { return hasher }, sharedKey.Bytes, rootKey.Bytes, defaultCryptoKDFInfo)
 
-	output := make([]byte, kdfOutputLen)
+	output := make([]byte, defaultCryptoKDFOutputLen)
 	if _, err := io.ReadFull(kdf, output); err != nil {
 		return keys.Root{}, keys.MessageMaster{}, keys.Header{}, fmt.Errorf("KDF: %w", err)
 	}

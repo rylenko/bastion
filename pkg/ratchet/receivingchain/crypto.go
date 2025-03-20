@@ -19,13 +19,13 @@ type Crypto interface {
 	DecryptMessage(key keys.Message, encryptedData, auth []byte) ([]byte, error)
 }
 
-type crypto struct{}
+type defaultCrypto struct{}
 
-func newCrypto() crypto {
-	return crypto{}
+func newDefaultCrypto() defaultCrypto {
+	return defaultCrypto{}
 }
 
-func (c crypto) AdvanceChain(masterKey keys.MessageMaster) (keys.MessageMaster, keys.Message, error) {
+func (c defaultCrypto) AdvanceChain(masterKey keys.MessageMaster) (keys.MessageMaster, keys.Message, error) {
 	hasher, err := blake2b.New512(nil)
 	if err != nil {
 		return keys.MessageMaster{}, keys.Message{}, fmt.Errorf("new hash: %w", err)
@@ -51,7 +51,7 @@ func (c crypto) AdvanceChain(masterKey keys.MessageMaster) (keys.MessageMaster, 
 	return newMasterKey, messageKey, nil
 }
 
-func (c crypto) DecryptHeader(key keys.Header, encryptedHeader []byte) (header.Header, error) {
+func (c defaultCrypto) DecryptHeader(key keys.Header, encryptedHeader []byte) (header.Header, error) {
 	if len(encryptedHeader) <= cipher.NonceSizeX {
 		return header.Header{}, fmt.Errorf("encrpted header too short, expected at least %d bytes", cipher.NonceSizeX+1)
 	}
@@ -70,7 +70,7 @@ func (c crypto) DecryptHeader(key keys.Header, encryptedHeader []byte) (header.H
 	return decryptedHeader, nil
 }
 
-func (c crypto) DecryptMessage(key keys.Message, encryptedData, auth []byte) ([]byte, error) {
+func (c defaultCrypto) DecryptMessage(key keys.Message, encryptedData, auth []byte) ([]byte, error) {
 	cipherKey, nonce, err := messagechainscommon.DeriveMessageCipherKeyAndNonce(key)
 	if err != nil {
 		return nil, fmt.Errorf("derive key and nonce: %w", err)
@@ -79,7 +79,7 @@ func (c crypto) DecryptMessage(key keys.Message, encryptedData, auth []byte) ([]
 	return c.decrypt(cipherKey, nonce, encryptedData, auth)
 }
 
-func (c crypto) decrypt(key, nonce, encryptedData, auth []byte) ([]byte, error) {
+func (c defaultCrypto) decrypt(key, nonce, encryptedData, auth []byte) ([]byte, error) {
 	cipher, err := cipher.NewX(key)
 	if err != nil {
 		return nil, fmt.Errorf("new cipher: %w", err)

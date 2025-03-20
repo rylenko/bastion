@@ -21,13 +21,13 @@ type Crypto interface {
 	EncryptMessage(key keys.Message, data, auth []byte) ([]byte, error)
 }
 
-type crypto struct{}
+type defaultCrypto struct{}
 
-func newCrypto() Crypto {
-	return crypto{}
+func newDefaultCrypto() Crypto {
+	return defaultCrypto{}
 }
 
-func (c crypto) AdvanceChain(masterKey keys.MessageMaster) (keys.MessageMaster, keys.Message, error) {
+func (c defaultCrypto) AdvanceChain(masterKey keys.MessageMaster) (keys.MessageMaster, keys.Message, error) {
 	hasher, err := blake2b.New512(nil)
 	if err != nil {
 		return keys.MessageMaster{}, keys.Message{}, fmt.Errorf("new hash: %w", err)
@@ -53,7 +53,7 @@ func (c crypto) AdvanceChain(masterKey keys.MessageMaster) (keys.MessageMaster, 
 	return newMasterKey, messageKey, nil
 }
 
-func (c crypto) EncryptHeader(key keys.Header, header header.Header) ([]byte, error) {
+func (c defaultCrypto) EncryptHeader(key keys.Header, header header.Header) ([]byte, error) {
 	var nonce [cipher.NonceSizeX]byte
 	if _, err := rand.Read(nonce[:]); err != nil {
 		return nil, fmt.Errorf("generate random nonce: %w", err)
@@ -67,7 +67,7 @@ func (c crypto) EncryptHeader(key keys.Header, header header.Header) ([]byte, er
 	return utils.ConcatByteSlices(nonce[:], encryptedHeader), nil
 }
 
-func (c crypto) EncryptMessage(key keys.Message, data, auth []byte) ([]byte, error) {
+func (c defaultCrypto) EncryptMessage(key keys.Message, data, auth []byte) ([]byte, error) {
 	cipherKey, nonce, err := messagechainscommon.DeriveMessageCipherKeyAndNonce(key)
 	if err != nil {
 		return nil, fmt.Errorf("derive key and nonce: %w", err)
@@ -76,7 +76,7 @@ func (c crypto) EncryptMessage(key keys.Message, data, auth []byte) ([]byte, err
 	return c.encrypt(cipherKey, nonce, data, auth)
 }
 
-func (c crypto) encrypt(key, nonce, data, auth []byte) ([]byte, error) {
+func (c defaultCrypto) encrypt(key, nonce, data, auth []byte) ([]byte, error) {
 	cipher, err := cipher.NewX(key)
 	if err != nil {
 		return nil, fmt.Errorf("new cipher: %w", err)

@@ -11,7 +11,7 @@ type config struct {
 }
 
 func newConfig(options []Option) (config, error) {
-	cfg := config{crypto: newCrypto()}
+	cfg := config{crypto: newDefaultCrypto()}
 	if err := cfg.applyOptions(options); err != nil {
 		return config{}, fmt.Errorf("%w: %w", errors.ErrOption, err)
 	}
