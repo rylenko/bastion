@@ -2,12 +2,12 @@ package keys
 
 import "testing"
 
-func TestHeaderClone(t *testing.T) {
+func TestPublicClone(t *testing.T) {
 	t.Parallel()
 
-	keys := []Header{
-		Header{Bytes: nil},
-		Header{Bytes: []byte{1, 2, 3, 4, 5}},
+	keys := []Public{
+		Public{Bytes: nil},
+		Public{Bytes: []byte{1, 2, 3, 4, 5}},
 	}
 
 	for _, key := range keys {
@@ -16,13 +16,13 @@ func TestHeaderClone(t *testing.T) {
 	}
 }
 
-func TestHeaderClonePtr(t *testing.T) {
+func TestPublicClonePtr(t *testing.T) {
 	t.Parallel()
 
-	keys := []*Header{
+	keys := []*Public{
 		nil,
-		&Header{Bytes: nil},
-		&Header{Bytes: []byte{1, 2, 3, 4, 5}},
+		&Public{Bytes: nil},
+		&Public{Bytes: []byte{1, 2, 3, 4, 5}},
 	}
 
 	for _, key := range keys {
