@@ -7,6 +7,7 @@ import (
 	"github.com/rylenko/bastion/pkg/ratchet/receivingchain"
 	"github.com/rylenko/bastion/pkg/ratchet/rootchain"
 	"github.com/rylenko/bastion/pkg/ratchet/sendingchain"
+	"github.com/rylenko/bastion/pkg/utils"
 )
 
 type config struct {
@@ -33,4 +34,39 @@ func (cfg *config) applyOptions(options []Option) error {
 	}
 
 	return nil
+}
+
+type Option func(cfg *config) error
+
+func WithCrypto(crypto Crypto) Option {
+	return func(cfg *config) error {
+		if utils.IsNil(crypto) {
+			return fmt.Errorf("%w: crypto is nil", errlist.ErrInvalidValue)
+		}
+
+		cfg.crypto = crypto
+
+		return nil
+	}
+}
+
+func WithReceivingChainOptions(options ...receivingchain.Option) Option {
+	return func(cfg *config) error {
+		cfg.receivingOptions = options
+		return nil
+	}
+}
+
+func WithRootChainOptions(options ...rootchain.Option) Option {
+	return func(cfg *config) error {
+		cfg.rootOptions = options
+		return nil
+	}
+}
+
+func WithSendingChainOptions(options ...sendingchain.Option) Option {
+	return func(cfg *config) error {
+		cfg.sendingOptions = options
+		return nil
+	}
 }

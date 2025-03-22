@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/rylenko/bastion/pkg/ratchet/errlist"
+	"github.com/rylenko/bastion/pkg/utils"
 )
 
 type config struct {
@@ -36,4 +37,30 @@ func (cfg *config) applyOptions(options []Option) error {
 func (cfg config) clone() config {
 	cfg.skippedKeysStorage = cfg.skippedKeysStorage.Clone()
 	return cfg
+}
+
+type Option func(cfg *config) error
+
+func WithCrypto(crypto Crypto) Option {
+	return func(cfg *config) error {
+		if utils.IsNil(crypto) {
+			return fmt.Errorf("%w: crypto is nil", errlist.ErrInvalidValue)
+		}
+
+		cfg.crypto = crypto
+
+		return nil
+	}
+}
+
+func WithSkippedKeysStorage(storage SkippedKeysStorage) Option {
+	return func(cfg *config) error {
+		if utils.IsNil(storage) {
+			return fmt.Errorf("%w: storage is nil", errlist.ErrInvalidValue)
+		}
+
+		cfg.skippedKeysStorage = storage
+
+		return nil
+	}
 }
